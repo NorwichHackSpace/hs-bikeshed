@@ -51,7 +51,7 @@ This document is a **high‑level design specification** intended to be shared w
 
 The following are explicitly out of scope for the initial system:
 
-- Financial systems or payment processing
+- Financial systems or payment processing (note: read-only bank transaction import for reconciliation is supported)
 - Physical access control or machine interlocks
 - Automated enforcement or disciplinary logic
 - Wiki-style long-form documentation
@@ -206,6 +206,62 @@ Projects are informational and optional.
 
 ---
 
+### 6.6 Bank Transaction Import
+
+Administrators can import bank statements (CSV format) to track membership payments and reconcile them against member records.
+
+#### Import Workflow
+
+1. **Upload CSV** - Admin uploads a bank statement CSV file via drag-and-drop or file browser
+2. **Auto-matching** - System automatically matches transactions to members using their `payment_reference` field
+3. **Review & Manual Match** - Admin reviews matches, can manually assign unmatched transactions to members
+4. **Confirm Import** - Only matched transactions are imported; unmatched and duplicates are skipped
+
+#### Matching Rules
+
+- Transactions are matched when the bank description **starts with** a member's `payment_reference`
+- Payment references must be at least 5 characters
+- When manually matching a member who has no payment reference, it is automatically set from the transaction description
+- Only matched transactions (auto or manual) are imported to the database
+
+#### Duplicate Detection
+
+- Before import, transactions are checked against existing records
+- Duplicates are identified by matching: date + description + amount
+- Duplicates are displayed with strikethrough styling and skipped during import
+
+#### CSV Format Support
+
+The parser supports various bank CSV formats with flexible column detection:
+- **Date columns**: Date, Transaction Date, Trans Date, Posted Date, Value Date
+- **Description columns**: Description, Narrative, Details, Memo
+- **Amount columns**: Amount, Value, or separate Credit/Debit columns
+- **Date formats**: DD/MM/YYYY (UK), YYYY-MM-DD (ISO), DD MMM YYYY
+
+#### Data Model
+
+**Transaction Import**
+- Filename
+- Upload date and user
+- Row count and matched count
+- Status (pending, processing, completed)
+
+**Transaction**
+- Transaction date
+- Description
+- Amount
+- User reference (matched member)
+- Match confidence (auto, manual, unmatched)
+- Import batch reference
+- Original CSV row data (for audit)
+
+#### Access Control
+
+- Only administrators can access the transaction import feature
+- Members can view their own payment history (future enhancement)
+
+---
+
 ## 7. Data Model & Relationships (High Level)
 
 ### 7.1 Core Entities
@@ -235,6 +291,15 @@ Projects are informational and optional.
 - Belongs to one user
 - May reference many pieces of equipment
 
+#### Transaction Import
+- Belongs to one user (uploader)
+- Has many transactions
+
+#### Transaction
+- Belongs to one transaction import
+- May belong to one user (matched member)
+- May reference a user who performed the match
+
 ---
 
 ## 8. CRUD Interfaces
@@ -246,6 +311,7 @@ The application will provide administrative and member-facing CRUD pages for:
 - Inductions
 - Bookings
 - Projects
+- Transactions (admin only - import, view, match/unmatch)
 
 Interfaces should prioritise clarity and ease of use over density of information.
 

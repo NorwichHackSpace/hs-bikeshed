@@ -14,6 +14,7 @@ import BuildIcon from '@mui/icons-material/Build'
 import SchoolIcon from '@mui/icons-material/School'
 import EventIcon from '@mui/icons-material/Event'
 import FolderIcon from '@mui/icons-material/Folder'
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 
 const adminSections = [
   {
@@ -50,6 +51,13 @@ const adminSections = [
     icon: <FolderIcon sx={{ fontSize: 48 }} />,
     href: '/admin/projects',
     color: '#E91E63',
+  },
+  {
+    title: 'Transactions',
+    description: 'Import bank statements and match payments',
+    icon: <AccountBalanceIcon sx={{ fontSize: 48 }} />,
+    href: '/admin/transactions',
+    color: '#00897B',
   },
 ]
 

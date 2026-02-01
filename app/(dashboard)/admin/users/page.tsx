@@ -41,7 +41,8 @@ import SearchIcon from '@mui/icons-material/Search'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useRouter } from 'next/navigation'
 import { getClient } from '@/lib/supabase/client'
-import type { Profile, UserRole, Equipment } from '@/types/database'
+import type { Profile, UserRole, Equipment, PaymentSummary, Transaction } from '@/types/database'
+import { useTransactionStore } from '@/stores'
 
 interface UserWithRoles extends Profile {
   roles: UserRole[]
@@ -80,6 +81,137 @@ function TabPanel({ children, value, index }: TabPanelProps) {
   )
 }
 
+function PaymentsTabContent({ userId }: { userId: string | undefined }) {
+  const { getUserPaymentSummary } = useTransactionStore()
+  const [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (userId) {
+      setLoading(true)
+      getUserPaymentSummary(userId)
+        .then(setPaymentSummary)
+        .finally(() => setLoading(false))
+    }
+  }, [userId, getUserPaymentSummary])
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return 'Never'
+    return new Date(dateStr).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+    }).format(amount)
+  }
+
+  if (!userId) {
+    return <Typography color="text.secondary">No user selected</Typography>
+  }
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress size={24} />
+      </Box>
+    )
+  }
+
+  if (!paymentSummary) {
+    return <Typography color="text.secondary">Unable to load payment data</Typography>
+  }
+
+  return (
+    <Box>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
+            <Typography variant="h5" fontWeight={600} color="success.main">
+              {formatAmount(paymentSummary.totalPaid)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total Paid
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
+            <Typography variant="h5" fontWeight={600}>
+              {paymentSummary.paymentCount}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total Payments
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
+            <Typography variant="h5" fontWeight={600}>
+              {formatDate(paymentSummary.lastPaymentDate)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Last Payment
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {paymentSummary.transactions.length > 0 ? (
+        <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 300 }}>
+          <Table size="small" stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell>Date</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell align="right">Amount</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paymentSummary.transactions.map((tx: Transaction) => (
+                <TableRow key={tx.id}>
+                  <TableCell>{formatDate(tx.transaction_date)}</TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        maxWidth: 200,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {tx.description}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography
+                      variant="body2"
+                      fontWeight={500}
+                      color={tx.amount >= 0 ? 'success.main' : 'error.main'}
+                    >
+                      {formatAmount(Number(tx.amount))}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      ) : (
+        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+          No payment records found for this user
+        </Typography>
+      )}
+    </Box>
+  )
+}
+
 export default function AdminUsersPage() {
   const router = useRouter()
   const [users, setUsers] = useState<UserWithRoles[]>([])
@@ -101,6 +233,7 @@ export default function AdminUsersPage() {
     membershipStatus: 'active' as 'active' | 'inactive' | 'lapsed',
     roles: [] as UserRole[],
     maintainerOf: [] as string[],
+    paymentReference: '',
   })
 
   const fetchUsers = useCallback(async () => {
@@ -183,6 +316,7 @@ export default function AdminUsersPage() {
       membershipStatus: user.membership_status || 'active',
       roles: user.roles,
       maintainerOf: user.maintainerOf,
+      paymentReference: user.payment_reference || '',
     })
     setActiveTab(0)
     setDialogOpen(true)
@@ -223,6 +357,7 @@ export default function AdminUsersPage() {
           name: `${editForm.firstName} ${editForm.lastName}`.trim(),
           phone: editForm.phone,
           membership_status: editForm.membershipStatus,
+          payment_reference: editForm.paymentReference || null,
         })
         .eq('id', editingUser.id)
 
@@ -469,6 +604,7 @@ export default function AdminUsersPage() {
           <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tab label="Profile" />
             <Tab label="Roles" />
+            <Tab label="Payments" />
             <Tab label="Details" />
           </Tabs>
 
@@ -524,6 +660,19 @@ export default function AdminUsersPage() {
                   <MenuItem value="inactive">Inactive</MenuItem>
                   <MenuItem value="lapsed">Lapsed</MenuItem>
                 </TextField>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Divider sx={{ my: 1 }} />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label="Payment Reference"
+                  value={editForm.paymentReference}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, paymentReference: e.target.value }))}
+                  placeholder="e.g., SHALOM T"
+                  helperText="Bank transaction descriptions starting with this text will auto-match to this user (min 5 characters)"
+                />
               </Grid>
             </Grid>
           </TabPanel>
@@ -635,6 +784,10 @@ export default function AdminUsersPage() {
           </TabPanel>
 
           <TabPanel value={activeTab} index={2}>
+            <PaymentsTabContent userId={editingUser?.id} />
+          </TabPanel>
+
+          <TabPanel value={activeTab} index={3}>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="subtitle2" color="text.secondary">

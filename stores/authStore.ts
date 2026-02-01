@@ -56,6 +56,9 @@ interface AuthActions {
 
 type AuthStore = AuthState & AuthActions
 
+// Track if auth listener has been set up (prevents duplicate listeners)
+let authListenerInitialized = false
+
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   session: null,
@@ -78,20 +81,21 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       }
     } catch (error) {
       set({ error: (error as Error).message })
-    } finally {
-      set({ loading: false })
     }
 
-    // Listen for auth changes
-    supabase.auth.onAuthStateChange(async (_event, session) => {
-      set({ user: session?.user ?? null, session })
+    // Only set up auth listener once
+    if (!authListenerInitialized) {
+      authListenerInitialized = true
+      supabase.auth.onAuthStateChange(async (_event, session) => {
+        set({ user: session?.user ?? null, session })
 
-      if (session?.user) {
-        await get().fetchProfile()
-      } else {
-        set({ profile: null, roles: [] })
-      }
-    })
+        if (session?.user) {
+          await get().fetchProfile()
+        } else {
+          set({ profile: null, roles: [] })
+        }
+      })
+    }
   },
 
   signInWithEmail: async (email, password) => {

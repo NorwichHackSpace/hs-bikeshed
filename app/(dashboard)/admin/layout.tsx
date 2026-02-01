@@ -2,27 +2,26 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Box, CircularProgress, Alert } from '@mui/material'
+import { Alert } from '@mui/material'
 import { useAuthStore } from '@/stores'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const { profile, roles, loading } = useAuthStore()
+  const { profile, roles } = useAuthStore()
   const isAdmin = roles.includes('administrator')
 
   useEffect(() => {
-    // Wait for auth to initialize before redirecting
-    if (!loading && profile && !isAdmin) {
+    // Redirect non-admins - profile will be set by AuthProvider before this renders
+    if (profile && !isAdmin) {
       router.push('/equipment')
     }
-  }, [loading, profile, isAdmin, router])
+  }, [profile, isAdmin, router])
 
-  if (loading || !profile) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <CircularProgress />
-      </Box>
-    )
+  // AuthProvider already shows loading during initialization
+  // Once we're here, profile should be loaded
+  if (!profile) {
+    // Brief state during hydration - don't show spinner, AuthProvider handles it
+    return null
   }
 
   if (!isAdmin) {

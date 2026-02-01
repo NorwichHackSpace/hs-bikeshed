@@ -291,6 +291,8 @@ export type Database = {
           join_date: string | null
           created_at: string | null
           updated_at: string | null
+          // Payment matching
+          payment_reference: string | null
         }
         Insert: {
           id: string
@@ -326,6 +328,7 @@ export type Database = {
           join_date?: string | null
           created_at?: string | null
           updated_at?: string | null
+          payment_reference?: string | null
         }
         Update: {
           id?: string
@@ -361,6 +364,7 @@ export type Database = {
           join_date?: string | null
           created_at?: string | null
           updated_at?: string | null
+          payment_reference?: string | null
         }
         Relationships: []
       }
@@ -531,6 +535,114 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          id: string
+          transaction_date: string
+          description: string
+          amount: number
+          reference: string | null
+          balance: number | null
+          user_id: string | null
+          match_confidence: 'auto' | 'manual' | 'unmatched' | null
+          matched_by: string | null
+          matched_at: string | null
+          import_batch_id: string
+          raw_data: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          transaction_date: string
+          description: string
+          amount: number
+          reference?: string | null
+          balance?: number | null
+          user_id?: string | null
+          match_confidence?: 'auto' | 'manual' | 'unmatched' | null
+          matched_by?: string | null
+          matched_at?: string | null
+          import_batch_id: string
+          raw_data?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          transaction_date?: string
+          description?: string
+          amount?: number
+          reference?: string | null
+          balance?: number | null
+          user_id?: string | null
+          match_confidence?: 'auto' | 'manual' | 'unmatched' | null
+          matched_by?: string | null
+          matched_at?: string | null
+          import_batch_id?: string
+          raw_data?: Json | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_matched_by_fkey"
+            columns: ["matched_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_imports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_imports: {
+        Row: {
+          id: string
+          filename: string
+          uploaded_by: string
+          uploaded_at: string | null
+          row_count: number | null
+          matched_count: number | null
+          status: 'pending' | 'processing' | 'completed' | null
+        }
+        Insert: {
+          id?: string
+          filename: string
+          uploaded_by: string
+          uploaded_at?: string | null
+          row_count?: number | null
+          matched_count?: number | null
+          status?: 'pending' | 'processing' | 'completed' | null
+        }
+        Update: {
+          id?: string
+          filename?: string
+          uploaded_by?: string
+          uploaded_at?: string | null
+          row_count?: number | null
+          matched_count?: number | null
+          status?: 'pending' | 'processing' | 'completed' | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_imports_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -569,3 +681,21 @@ export type UserRoleRecord = Database["public"]["Tables"]["user_roles"]["Row"]
 export type MembershipStatus = Database["public"]["Enums"]["membership_status"]
 export type EquipmentStatus = Database["public"]["Enums"]["equipment_status"]
 export type UserRole = Database["public"]["Enums"]["user_role"]
+
+// Transaction types
+export type Transaction = Database["public"]["Tables"]["transactions"]["Row"]
+export type TransactionImport = Database["public"]["Tables"]["transaction_imports"]["Row"]
+
+// Transaction with joined user profile
+export interface TransactionWithUser extends Transaction {
+  profiles?: Profile | null
+  matched_by_profile?: Profile | null
+}
+
+// Payment summary for a user
+export interface PaymentSummary {
+  totalPaid: number
+  lastPaymentDate: string | null
+  paymentCount: number
+  transactions: Transaction[]
+}
