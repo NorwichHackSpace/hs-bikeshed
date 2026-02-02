@@ -24,6 +24,7 @@ interface BookingDialogProps {
   onClose: () => void
   selectedDate: Date | null
   booking?: Booking | null
+  preselectedEquipment?: Equipment | null
 }
 
 // Generate time slots in 15-minute increments
@@ -68,11 +69,13 @@ export function BookingDialog({
   onClose,
   selectedDate,
   booking,
+  preselectedEquipment,
 }: BookingDialogProps) {
   const { equipment, fetchEquipment } = useEquipmentStore()
   const { createBooking, updateBooking, deleteBooking } = useBookingStore()
 
   const isEdit = Boolean(booking)
+  const hasPreselectedEquipment = Boolean(preselectedEquipment)
 
   // Filter to only show operational equipment that requires booking
   const availableEquipment = useMemo(
@@ -143,11 +146,13 @@ export function BookingDialog({
           notes: booking.notes ?? '',
         },
       })
-    } else if (selectedDate) {
+    } else {
+      // Default values for new booking
+      const defaultDate = selectedDate ?? new Date()
       formik.resetForm({
         values: {
-          equipment: null,
-          date: selectedDate.toISOString().split('T')[0],
+          equipment: preselectedEquipment ?? null,
+          date: defaultDate.toISOString().split('T')[0],
           startTime: '09:00',
           endTime: '10:00',
           notes: '',
@@ -155,7 +160,7 @@ export function BookingDialog({
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [booking, selectedDate, open, equipment])
+  }, [booking, selectedDate, open, equipment, preselectedEquipment])
 
   const handleDelete = async () => {
     if (!booking) return
@@ -193,12 +198,13 @@ export function BookingDialog({
               }
               groupBy={(option) => option.category ?? 'Other'}
               isOptionEqualToValue={(option, value) => option.id === value.id}
+              disabled={hasPreselectedEquipment}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   label="Equipment"
                   required
-                  placeholder="Search equipment..."
+                  placeholder={hasPreselectedEquipment ? '' : 'Search equipment...'}
                   error={formik.touched.equipment && Boolean(formik.errors.equipment)}
                   helperText={formik.touched.equipment && formik.errors.equipment}
                 />

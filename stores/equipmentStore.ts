@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { getClient } from '@/lib/supabase/client'
 import type { Equipment, Profile } from '@/types/database'
 
-interface EquipmentWithMaintainers extends Equipment {
+export interface EquipmentWithMaintainers extends Equipment {
   maintainers?: Profile[]
 }
 

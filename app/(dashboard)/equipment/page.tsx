@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Box,
   Card,
@@ -16,8 +17,9 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import BuildIcon from '@mui/icons-material/Build'
-import { useEquipmentStore } from '@/stores'
+import { useEquipmentStore, type EquipmentWithMaintainers } from '@/stores'
 import { EquipmentDialog } from '@/components/features/EquipmentDialog'
+import { getCategorySlug } from '@/lib/utils'
 import type { Equipment } from '@/types/database'
 
 const statusColors: Record<string, 'success' | 'warning' | 'error'> = {
@@ -44,31 +46,26 @@ const getImageUrl = (path: string) => {
 }
 
 export default function EquipmentPage() {
-  const { equipment, loading, error, fetchEquipment, createEquipment, updateEquipment } =
+  const router = useRouter()
+  const { equipment, loading, error, fetchEquipment, createEquipment } =
     useEquipmentStore()
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null)
 
   useEffect(() => {
     fetchEquipment()
   }, [fetchEquipment])
 
   const handleAdd = () => {
-    setEditingEquipment(null)
     setDialogOpen(true)
   }
 
-  const handleEdit = (item: Equipment) => {
-    setEditingEquipment(item)
-    setDialogOpen(true)
+  const handleCardClick = (item: EquipmentWithMaintainers) => {
+    const categorySlug = getCategorySlug(item.category)
+    router.push(`/equipment/${categorySlug}/${item.id}`)
   }
 
   const handleSave = async (data: Partial<Equipment>) => {
-    if (editingEquipment) {
-      await updateEquipment(editingEquipment.id, data)
-    } else {
-      await createEquipment(data as Omit<Equipment, 'id' | 'created_at' | 'updated_at'>)
-    }
+    await createEquipment(data as Omit<Equipment, 'id' | 'created_at' | 'updated_at'>)
   }
 
   if (loading && equipment.length === 0) {
@@ -168,7 +165,7 @@ export default function EquipmentPage() {
           {equipment.map((item) => (
             <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={item.id}>
               <Card
-                onClick={() => handleEdit(item)}
+                onClick={() => handleCardClick(item)}
                 sx={{
                   height: '100%',
                   display: 'flex',
@@ -354,7 +351,7 @@ export default function EquipmentPage() {
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         onSave={handleSave}
-        equipment={editingEquipment}
+        equipment={null}
       />
     </Box>
   )
