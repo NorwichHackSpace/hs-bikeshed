@@ -363,17 +363,36 @@ export default function AdminUsersPage() {
 
       if (profileError) throw profileError
 
-      // Update roles - delete existing and insert new
-      const { error: deleteRolesError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', editingUser.id)
+      // Safety check: warn if removing all roles from a user who had roles
+      if (editForm.roles.length === 0 && editingUser.roles.length > 0) {
+        const confirmed = confirm(
+          `Warning: You are removing all roles from ${editingUser.name}. They will lose all access. Continue?`
+        )
+        if (!confirmed) {
+          setSaving(false)
+          return
+        }
+      }
 
-      if (deleteRolesError) throw deleteRolesError
+      // Calculate role changes for more efficient updates
+      const rolesToAdd = editForm.roles.filter(r => !editingUser.roles.includes(r))
+      const rolesToRemove = editingUser.roles.filter(r => !editForm.roles.includes(r))
 
-      if (editForm.roles.length > 0) {
+      // Remove roles that are no longer selected
+      if (rolesToRemove.length > 0) {
+        const { error: deleteRolesError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', editingUser.id)
+          .in('role', rolesToRemove)
+
+        if (deleteRolesError) throw deleteRolesError
+      }
+
+      // Add newly selected roles
+      if (rolesToAdd.length > 0) {
         const { error: insertRolesError } = await supabase.from('user_roles').insert(
-          editForm.roles.map((role) => ({
+          rolesToAdd.map((role) => ({
             user_id: editingUser.id,
             role,
           }))
@@ -382,19 +401,27 @@ export default function AdminUsersPage() {
         if (insertRolesError) throw insertRolesError
       }
 
-      // Update equipment maintainer assignments - delete existing and insert new
-      const { error: deleteMaintainerError } = await supabase
-        .from('equipment_maintainers')
-        .delete()
-        .eq('user_id', editingUser.id)
+      // Calculate equipment maintainer changes for more efficient updates
+      const equipmentToAdd = editForm.maintainerOf.filter(id => !editingUser.maintainerOf.includes(id))
+      const equipmentToRemove = editingUser.maintainerOf.filter(id => !editForm.maintainerOf.includes(id))
 
-      if (deleteMaintainerError) throw deleteMaintainerError
+      // Remove equipment assignments that are no longer selected
+      if (equipmentToRemove.length > 0) {
+        const { error: deleteMaintainerError } = await supabase
+          .from('equipment_maintainers')
+          .delete()
+          .eq('user_id', editingUser.id)
+          .in('equipment_id', equipmentToRemove)
 
-      if (editForm.maintainerOf.length > 0) {
+        if (deleteMaintainerError) throw deleteMaintainerError
+      }
+
+      // Add newly selected equipment assignments
+      if (equipmentToAdd.length > 0) {
         const { error: insertMaintainerError } = await supabase
           .from('equipment_maintainers')
           .insert(
-            editForm.maintainerOf.map((equipmentId) => ({
+            equipmentToAdd.map((equipmentId) => ({
               user_id: editingUser.id,
               equipment_id: equipmentId,
             }))

@@ -30,6 +30,8 @@ import SchoolIcon from '@mui/icons-material/School'
 import FolderIcon from '@mui/icons-material/Folder'
 import PersonIcon from '@mui/icons-material/Person'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
+import DescriptionIcon from '@mui/icons-material/Description'
+import HandymanIcon from '@mui/icons-material/Handyman'
 import { useAuthStore } from '@/stores'
 
 const DRAWER_WIDTH = 280
@@ -40,10 +42,15 @@ const navItems = [
   { label: 'Bookings', href: '/bookings', icon: <EventIcon /> },
   { label: 'Inductions', href: '/inductions', icon: <SchoolIcon /> },
   { label: 'Projects', href: '/projects', icon: <FolderIcon /> },
+  { label: 'Design Doc', href: '/design', icon: <DescriptionIcon /> },
 ]
 
 const adminItems = [
   { label: 'Admin', href: '/admin', icon: <AdminPanelSettingsIcon /> },
+]
+
+const maintainerItems = [
+  { label: 'Maintainers', href: '/maintainers', icon: <HandymanIcon /> },
 ]
 
 export function Navigation() {
@@ -51,7 +58,7 @@ export function Navigation() {
   const pathname = usePathname()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  const { profile, isAdmin, signOut } = useAuthStore()
+  const { profile, isAdmin, isMaintainer, signOut } = useAuthStore()
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -81,7 +88,12 @@ export function Navigation() {
     }
   }
 
-  const allNavItems = isAdmin() ? [...navItems, ...adminItems] : navItems
+  const showMaintainer = isAdmin() || isMaintainer()
+  const allNavItems = [
+    ...navItems,
+    ...(showMaintainer ? maintainerItems : []),
+    ...(isAdmin() ? adminItems : []),
+  ]
 
   const drawer = (
     <Box

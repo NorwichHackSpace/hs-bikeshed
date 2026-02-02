@@ -3,3 +3,4 @@ export { useEquipmentStore, type EquipmentWithMaintainers } from './equipmentSto
 export { useBookingStore } from './bookingStore'
 export { useInductionStore } from './inductionStore'
 export { useTransactionStore } from './transactionStore'
+export { useMaintainerStore, type MaintainedEquipment } from './maintainerStore'
