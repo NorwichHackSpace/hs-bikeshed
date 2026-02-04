@@ -23,9 +23,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditIcon from '@mui/icons-material/Edit'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
-import { useEquipmentStore, useInductionStore, useBookingStore } from '@/stores'
+import { useEquipmentStore, useInductionStore, useBookingStore, useAuthStore, useDocumentStore } from '@/stores'
 import { EquipmentForm } from '@/components/features/EquipmentForm'
 import { BookingDialog } from '@/components/features/BookingDialog'
+import { DocumentList } from '@/components/features/documents'
 import { getCategorySlug } from '@/lib/utils'
 import type { Equipment } from '@/types/database'
 
@@ -66,6 +67,7 @@ export default function EquipmentDetailPage() {
     loading: inductionLoading,
   } = useInductionStore()
   const { myBookings, fetchMyBookings, deleteBooking } = useBookingStore()
+  const { fetchDocumentsForEquipment, clearDocuments } = useDocumentStore()
   const [isEditing, setIsEditing] = useState(false)
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [requestingInduction, setRequestingInduction] = useState(false)
@@ -88,18 +90,25 @@ export default function EquipmentDetailPage() {
     (b) => b.equipment_id === equipmentId && new Date(b.start_time) >= new Date()
   )
 
+  // Check if user can manage documents (is maintainer or admin)
+  const canManageDocuments = selectedEquipment?.maintainers?.some(
+    (m) => m.id === useAuthStore.getState().user?.id
+  ) ?? false
+
   useEffect(() => {
     if (equipmentId) {
       fetchEquipmentById(equipmentId)
       fetchMyInductions()
       fetchMyRequests()
       fetchMyBookings()
+      fetchDocumentsForEquipment(equipmentId)
     }
 
     return () => {
       clearSelected()
+      clearDocuments()
     }
-  }, [equipmentId, fetchEquipmentById, fetchMyInductions, fetchMyRequests, fetchMyBookings, clearSelected])
+  }, [equipmentId, fetchEquipmentById, fetchMyInductions, fetchMyRequests, fetchMyBookings, fetchDocumentsForEquipment, clearSelected, clearDocuments])
 
   const handleRequestInduction = async () => {
     setRequestingInduction(true)
@@ -291,6 +300,16 @@ export default function EquipmentDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Documents */}
+          <Card sx={{ mt: 3 }}>
+            <CardContent>
+              <DocumentList
+                equipmentId={equipmentId}
+                canManage={canManageDocuments}
+              />
+            </CardContent>
+          </Card>
         </Box>
 
         {/* Sidebar */}
