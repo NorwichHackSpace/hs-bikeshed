@@ -643,6 +643,69 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          id: string
+          equipment_id: string
+          filename: string
+          storage_path: string
+          file_size: number
+          mime_type: string
+          title: string
+          description: string | null
+          tags: string[]
+          is_public: boolean
+          uploaded_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          equipment_id: string
+          filename: string
+          storage_path: string
+          file_size: number
+          mime_type: string
+          title: string
+          description?: string | null
+          tags?: string[]
+          is_public?: boolean
+          uploaded_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          equipment_id?: string
+          filename?: string
+          storage_path?: string
+          file_size?: number
+          mime_type?: string
+          title?: string
+          description?: string | null
+          tags?: string[]
+          is_public?: boolean
+          uploaded_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -685,6 +748,9 @@ export type UserRole = Database["public"]["Enums"]["user_role"]
 // Transaction types
 export type Transaction = Database["public"]["Tables"]["transactions"]["Row"]
 export type TransactionImport = Database["public"]["Tables"]["transaction_imports"]["Row"]
+
+// Document types
+export type Document = Database["public"]["Tables"]["documents"]["Row"]
 
 // Transaction with joined user profile
 export interface TransactionWithUser extends Transaction {
