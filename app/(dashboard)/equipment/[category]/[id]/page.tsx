@@ -67,7 +67,7 @@ export default function EquipmentDetailPage() {
     loading: inductionLoading,
   } = useInductionStore()
   const { myBookings, fetchMyBookings, deleteBooking } = useBookingStore()
-  const { fetchDocumentsForEquipment, clearDocuments } = useDocumentStore()
+  const { fetchDocumentsForEquipment, clearLinkedDocuments } = useDocumentStore()
   const [isEditing, setIsEditing] = useState(false)
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [requestingInduction, setRequestingInduction] = useState(false)
@@ -106,9 +106,9 @@ export default function EquipmentDetailPage() {
 
     return () => {
       clearSelected()
-      clearDocuments()
+      clearLinkedDocuments()
     }
-  }, [equipmentId, fetchEquipmentById, fetchMyInductions, fetchMyRequests, fetchMyBookings, fetchDocumentsForEquipment, clearSelected, clearDocuments])
+  }, [equipmentId, fetchEquipmentById, fetchMyInductions, fetchMyRequests, fetchMyBookings, fetchDocumentsForEquipment, clearSelected, clearLinkedDocuments])
 
   const handleRequestInduction = async () => {
     setRequestingInduction(true)
