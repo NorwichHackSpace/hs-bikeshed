@@ -47,7 +47,7 @@ const getImageUrl = (path: string) => {
 
 export default function EquipmentPage() {
   const router = useRouter()
-  const { equipment, loading, error, fetchEquipment, createEquipment } =
+  const { equipment, loading, initialized, error, fetchEquipment, createEquipment } =
     useEquipmentStore()
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -68,7 +68,7 @@ export default function EquipmentPage() {
     await createEquipment(data as Omit<Equipment, 'id' | 'created_at' | 'updated_at'>)
   }
 
-  if (loading && equipment.length === 0) {
+  if (!initialized && loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
         <CircularProgress />

@@ -32,7 +32,7 @@ interface BookingWithDetails extends Booking {
 }
 
 export default function BookingsPage() {
-  const { bookings, myBookings, loading, error, fetchBookings, fetchMyBookings } =
+  const { bookings, myBookings, loading, initialized, error, fetchBookings, fetchMyBookings } =
     useBookingStore()
 
   const [view, setView] = useState<'calendar' | 'list'>('calendar')
@@ -101,7 +101,7 @@ export default function BookingsPage() {
     (b) => new Date(b.end_time) > new Date()
   )
 
-  if (loading && bookings.length === 0) {
+  if (!initialized && loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
         <CircularProgress />

@@ -10,6 +10,7 @@ interface EquipmentState {
   equipment: EquipmentWithMaintainers[]
   selectedEquipment: EquipmentWithMaintainers | null
   loading: boolean
+  initialized: boolean
   error: string | null
 }
 
@@ -32,11 +33,15 @@ export const useEquipmentStore = create<EquipmentStore>((set, get) => ({
   equipment: [],
   selectedEquipment: null,
   loading: false,
+  initialized: false,
   error: null,
 
   fetchEquipment: async () => {
     const supabase = getClient()
-    set({ loading: true, error: null })
+    // Only show loading if not yet initialized (first load)
+    if (!get().initialized) {
+      set({ loading: true, error: null })
+    }
 
     try {
       const { data, error } = await supabase
@@ -59,7 +64,7 @@ export const useEquipmentStore = create<EquipmentStore>((set, get) => ({
           .filter((p): p is Profile => p !== null) ?? [],
       }))
 
-      set({ equipment: equipmentWithMaintainers })
+      set({ equipment: equipmentWithMaintainers, initialized: true })
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {

@@ -19,6 +19,7 @@ interface InductionState {
   requests: InductionRequestWithDetails[]
   myRequests: InductionRequestWithDetails[]
   loading: boolean
+  initialized: boolean
   error: string | null
 }
 
@@ -42,11 +43,14 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
   requests: [],
   myRequests: [],
   loading: false,
+  initialized: false,
   error: null,
 
   fetchInductions: async (equipmentId) => {
     const supabase = getClient()
-    set({ loading: true, error: null })
+    if (!get().initialized) {
+      set({ loading: true, error: null })
+    }
 
     try {
       let query = supabase
@@ -74,7 +78,7 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
         inducted_by_profile: item.inducted_by_profile,
       }))
 
-      set({ inductions: inductionsWithDetails })
+      set({ inductions: inductionsWithDetails, initialized: true })
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {
@@ -84,7 +88,9 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
 
   fetchMyInductions: async () => {
     const supabase = getClient()
-    set({ loading: true, error: null })
+    if (!get().initialized) {
+      set({ loading: true, error: null })
+    }
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -109,7 +115,7 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
         inducted_by_profile: item.inducted_by_profile,
       }))
 
-      set({ myInductions: inductionsWithDetails })
+      set({ myInductions: inductionsWithDetails, initialized: true })
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {
@@ -119,7 +125,9 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
 
   fetchRequests: async (equipmentId) => {
     const supabase = getClient()
-    set({ loading: true, error: null })
+    if (!get().initialized) {
+      set({ loading: true, error: null })
+    }
 
     try {
       let query = supabase
@@ -145,7 +153,7 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
         equipment: item.equipment,
       }))
 
-      set({ requests: requestsWithDetails })
+      set({ requests: requestsWithDetails, initialized: true })
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {
@@ -155,7 +163,9 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
 
   fetchMyRequests: async () => {
     const supabase = getClient()
-    set({ loading: true, error: null })
+    if (!get().initialized) {
+      set({ loading: true, error: null })
+    }
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -178,7 +188,7 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
         equipment: item.equipment,
       }))
 
-      set({ myRequests: requestsWithDetails })
+      set({ myRequests: requestsWithDetails, initialized: true })
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {

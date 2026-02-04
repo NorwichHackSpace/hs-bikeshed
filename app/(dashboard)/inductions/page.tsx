@@ -21,7 +21,7 @@ import PendingIcon from '@mui/icons-material/Pending'
 import { useInductionStore } from '@/stores'
 
 export default function InductionsPage() {
-  const { myInductions, myRequests, loading, error, fetchMyInductions, fetchMyRequests } =
+  const { myInductions, myRequests, loading, initialized, error, fetchMyInductions, fetchMyRequests } =
     useInductionStore()
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function InductionsPage() {
     fetchMyRequests()
   }, [fetchMyInductions, fetchMyRequests])
 
-  if (loading && myInductions.length === 0) {
+  if (!initialized && loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
         <CircularProgress />

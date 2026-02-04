@@ -11,6 +11,7 @@ interface BookingState {
   bookings: BookingWithDetails[]
   myBookings: BookingWithDetails[]
   loading: boolean
+  initialized: boolean
   error: string | null
 }
 
@@ -29,11 +30,14 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   bookings: [],
   myBookings: [],
   loading: false,
+  initialized: false,
   error: null,
 
   fetchBookings: async (equipmentId) => {
     const supabase = getClient()
-    set({ loading: true, error: null })
+    if (!get().initialized) {
+      set({ loading: true, error: null })
+    }
 
     try {
       let query = supabase
@@ -59,7 +63,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         equipment: item.equipment,
       }))
 
-      set({ bookings: bookingsWithDetails })
+      set({ bookings: bookingsWithDetails, initialized: true })
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {
@@ -69,7 +73,9 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
   fetchMyBookings: async () => {
     const supabase = getClient()
-    set({ loading: true, error: null })
+    if (!get().initialized) {
+      set({ loading: true, error: null })
+    }
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -92,7 +98,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         equipment: item.equipment,
       }))
 
-      set({ myBookings: bookingsWithDetails })
+      set({ myBookings: bookingsWithDetails, initialized: true })
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {
