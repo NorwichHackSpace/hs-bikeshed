@@ -18,15 +18,17 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import PublicIcon from '@mui/icons-material/Public'
 import LockIcon from '@mui/icons-material/Lock'
 import { useState } from 'react'
-import type { Document } from '@/types/database'
+import type { Document, DocumentWithLinkCounts } from '@/types/database'
 
 interface DocumentCardProps {
-  document: Document
+  document: Document | DocumentWithLinkCounts
   canEdit: boolean
   onPreview: () => void
   onEdit: () => void
   onDelete: () => void
   onDownload: () => void
+  deleteLabel?: string
+  showLinkCounts?: boolean
 }
 
 const formatFileSize = (bytes: number): string => {
@@ -48,6 +50,8 @@ export function DocumentCard({
   onEdit,
   onDelete,
   onDownload,
+  deleteLabel = 'Delete',
+  showLinkCounts = false,
 }: DocumentCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const menuOpen = Boolean(anchorEl)
@@ -164,6 +168,27 @@ export function DocumentCard({
                 </Box>
               )}
             </Box>
+
+            {showLinkCounts && 'equipment_count' in document && (
+              <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                {(document.equipment_count ?? 0) > 0 && (
+                  <Chip
+                    size="small"
+                    label={`${document.equipment_count} equipment`}
+                    variant="outlined"
+                    sx={{ height: 20, fontSize: '0.7rem' }}
+                  />
+                )}
+                {(document.project_count ?? 0) > 0 && (
+                  <Chip
+                    size="small"
+                    label={`${document.project_count} project${(document.project_count ?? 0) > 1 ? 's' : ''}`}
+                    variant="outlined"
+                    sx={{ height: 20, fontSize: '0.7rem' }}
+                  />
+                )}
+              </Box>
+            )}
           </Box>
         </Box>
       </CardContent>
@@ -175,7 +200,7 @@ export function DocumentCard({
         )}
         <MenuItem onClick={() => handleAction(onEdit)}>Edit</MenuItem>
         <MenuItem onClick={() => handleAction(onDelete)} sx={{ color: 'error.main' }}>
-          Delete
+          {deleteLabel}
         </MenuItem>
       </Menu>
     </Card>
