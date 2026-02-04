@@ -292,13 +292,17 @@ The parser supports various bank CSV formats with flexible column detection:
 
 ---
 
-### 6.7 Equipment Documents
+### 6.7 Document Library
 
-Equipment maintainers can upload and manage documents for their equipment, providing members with easy access to manuals, settings files, safety information, and templates.
+A central document library where any member can upload documents. Documents can be linked to equipment and projects, allowing shared resources to be attached to multiple entities.
 
-#### Scope
+#### Architecture
 
-This feature covers **equipment attachments only**. Project attachments and standalone documents may be added in a future iteration (see Ideas section 12.3).
+Documents are **first-class entities** stored in a central library. They can be linked to:
+- Equipment (e.g., manuals, settings files)
+- Projects (e.g., design files, build notes)
+
+This replaces direct attachment, allowing documents to be reused across multiple equipment/projects.
 
 #### Visibility Model
 
@@ -306,15 +310,17 @@ Documents have two visibility options:
 - **Members-only** (default) - Visible to logged-in members only
 - **Public** - Visible to anyone, shareable via direct URL
 
-This allows scenarios like:
-- A public PDF manual anyone can download
-- A members-only settings file with internal configurations
+Visibility is set at the document level by the uploader.
 
 #### Permissions
 
-Only **equipment maintainers** and **administrators** can upload, edit, or delete documents for a piece of equipment. This keeps documentation ownership clear and aligned with equipment responsibility.
-
-Members can view and download documents but cannot modify them.
+| Action | Who Can Do It |
+|--------|---------------|
+| Upload documents | Any authenticated member |
+| Edit/delete documents | Uploader or admin |
+| Link to equipment | Equipment maintainer or admin |
+| Link to projects | Project owner or admin |
+| View documents | Members see all; anonymous see public only |
 
 #### Supported File Types
 
@@ -326,38 +332,50 @@ File size limit: **50MB per file**
 
 #### Organisation
 
-Documents are organised using **free-form tags** (e.g., `manual`, `safety`, `settings`, `template`). Tags allow flexible categorisation and filtering on the equipment detail page.
+Documents are organised using **free-form tags** (e.g., `manual`, `safety`, `settings`, `template`). The library page supports search and filtering by tags, file type, and visibility.
 
 #### Features
 
-- **Upload** - Drag-and-drop or file browser, single or multiple files
-- **Metadata** - Title (defaults to filename), description, tags
+- **Upload** - Drag-and-drop or file browser on `/documents` page
+- **Metadata** - Title (defaults to filename), description, tags, visibility
 - **Preview** - In-browser preview for PDFs and images
 - **Download** - Direct download for all file types
 - **Edit** - Update title, description, tags, visibility
 - **Delete** - Remove document and associated storage file
+- **Linking** - Autocomplete search to link documents to equipment/projects
 
 #### User Experience
 
+**Document library page (`/documents`):**
+- Grid view of all documents
+- Search by title/description
+- Filter by tags, file type, visibility
+- "Upload Document" button for all members
+- Each card shows linked equipment/projects count
+
 **Equipment detail page:**
-- Documents section displays all attached files
-- Filter by tag
-- Click to preview (PDF/images) or download (other types)
-- Maintainers see upload/edit/delete controls
+- Documents section shows linked documents
+- "Link Document" button for maintainers
+- Can unlink documents (doesn't delete them)
+
+**Project detail page:**
+- Documents section shows linked documents
+- "Link Document" button for project owners
+- Can unlink documents (doesn't delete them)
 
 **Upload flow:**
-1. Maintainer clicks "Add Document" on equipment detail page
-2. Drag-and-drop or browse to select file(s)
-3. Enter title, description, tags
-4. Choose visibility (members-only or public)
-5. Upload and attach to equipment
+1. Member navigates to `/documents`
+2. Clicks "Upload Document"
+3. Drag-and-drop or browse to select file
+4. Enter title, description, tags, visibility
+5. Document saved to library
+6. Optionally link to equipment/projects
 
 #### Data Model
 
 ```
 documents
 - id (uuid)
-- equipment_id (FK to equipment)
 - filename (original uploaded filename)
 - storage_path (path in Supabase Storage)
 - file_size (bytes)
@@ -369,18 +387,35 @@ documents
 - uploaded_by (FK to profiles)
 - created_at
 - updated_at
+
+document_equipment_links
+- document_id (FK to documents)
+- equipment_id (FK to equipment)
+- linked_by (FK to profiles)
+- linked_at (timestamp)
+- PRIMARY KEY (document_id, equipment_id)
+
+document_project_links
+- document_id (FK to documents)
+- project_id (FK to projects)
+- linked_by (FK to profiles)
+- linked_at (timestamp)
+- PRIMARY KEY (document_id, project_id)
 ```
 
 #### Storage
 
 - Supabase Storage bucket: `equipment-documents`
-- Path structure: `/{equipment_id}/{document_id}/{filename}`
+- Path structure: `/{document_id}/{filename}`
 - RLS policies enforce visibility and permission rules
 
 #### Access Control
 
 - **View/Download**: Authenticated users see all documents; anonymous users see only public documents
-- **Create/Update/Delete**: User must be admin OR maintainer of the linked equipment
+- **Create**: Any authenticated user
+- **Update/Delete**: Uploader or admin
+- **Link/Unlink to equipment**: Equipment maintainer or admin
+- **Link/Unlink to projects**: Project owner or admin
 
 ---
 
@@ -398,7 +433,7 @@ documents
 - Has many maintainers
 - Has many inductions
 - Has many bookings
-- Has many documents
+- Has many linked documents (via document_equipment_links)
 
 #### Induction
 - Joins one user and one piece of equipment
@@ -413,6 +448,7 @@ documents
 #### Project
 - Belongs to one user
 - May reference many pieces of equipment
+- Has many linked documents (via document_project_links)
 
 #### Transaction Import
 - Belongs to one user (uploader)
@@ -424,8 +460,11 @@ documents
 - May reference a user who performed the match
 
 #### Document
-- Belongs to one piece of equipment
-- Uploaded by one user (maintainer or admin)
+- Standalone entity in central library
+- Can be linked to many equipment items
+- Can be linked to many projects
+- Uploaded by any authenticated member
+- Edited/deleted by uploader or admin
 
 ---
 
@@ -438,7 +477,7 @@ The application will provide administrative and member-facing CRUD pages for:
 - Inductions
 - Bookings
 - Projects
-- Documents (maintainers manage per-equipment, inline on equipment detail page)
+- Documents (central library at `/documents`, linked to equipment/projects)
 - Transactions (admin only - import, view, match/unmatch)
 
 Interfaces should prioritise clarity and ease of use over density of information.
