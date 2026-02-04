@@ -79,18 +79,10 @@ export function Navigation() {
   }
 
   const handleSignOut = async () => {
-    console.log('Sign out clicked')
     handleMenuClose()
-    try {
-      console.log('Calling signOut...')
-      await signOut()
-      console.log('SignOut completed')
-    } catch (err) {
-      console.error('SignOut error:', err)
-    } finally {
-      console.log('Redirecting to /login')
-      router.push('/login')
-    }
+    await signOut()
+    // Use hard redirect to ensure clean state
+    window.location.href = '/login'
   }
 
   const handleNavClick = (href: string) => {
