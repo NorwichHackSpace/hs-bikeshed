@@ -292,6 +292,98 @@ The parser supports various bank CSV formats with flexible column detection:
 
 ---
 
+### 6.7 Equipment Documents
+
+Equipment maintainers can upload and manage documents for their equipment, providing members with easy access to manuals, settings files, safety information, and templates.
+
+#### Scope
+
+This feature covers **equipment attachments only**. Project attachments and standalone documents may be added in a future iteration (see Ideas section 12.3).
+
+#### Visibility Model
+
+Documents have two visibility options:
+- **Members-only** (default) - Visible to logged-in members only
+- **Public** - Visible to anyone, shareable via direct URL
+
+This allows scenarios like:
+- A public PDF manual anyone can download
+- A members-only settings file with internal configurations
+
+#### Permissions
+
+Only **equipment maintainers** and **administrators** can upload, edit, or delete documents for a piece of equipment. This keeps documentation ownership clear and aligned with equipment responsibility.
+
+Members can view and download documents but cannot modify them.
+
+#### Supported File Types
+
+- **PDF** - Manuals, datasheets, safety procedures
+- **Images** - Photos, diagrams, quick-reference cards (JPEG, PNG, GIF, WebP)
+- **Maker files** - STL, DXF, SVG for templates and examples
+
+File size limit: **50MB per file**
+
+#### Organisation
+
+Documents are organised using **free-form tags** (e.g., `manual`, `safety`, `settings`, `template`). Tags allow flexible categorisation and filtering on the equipment detail page.
+
+#### Features
+
+- **Upload** - Drag-and-drop or file browser, single or multiple files
+- **Metadata** - Title (defaults to filename), description, tags
+- **Preview** - In-browser preview for PDFs and images
+- **Download** - Direct download for all file types
+- **Edit** - Update title, description, tags, visibility
+- **Delete** - Remove document and associated storage file
+
+#### User Experience
+
+**Equipment detail page:**
+- Documents section displays all attached files
+- Filter by tag
+- Click to preview (PDF/images) or download (other types)
+- Maintainers see upload/edit/delete controls
+
+**Upload flow:**
+1. Maintainer clicks "Add Document" on equipment detail page
+2. Drag-and-drop or browse to select file(s)
+3. Enter title, description, tags
+4. Choose visibility (members-only or public)
+5. Upload and attach to equipment
+
+#### Data Model
+
+```
+documents
+- id (uuid)
+- equipment_id (FK to equipment)
+- filename (original uploaded filename)
+- storage_path (path in Supabase Storage)
+- file_size (bytes)
+- mime_type
+- title (display name)
+- description (optional)
+- tags (text array)
+- is_public (boolean, default false)
+- uploaded_by (FK to profiles)
+- created_at
+- updated_at
+```
+
+#### Storage
+
+- Supabase Storage bucket: `equipment-documents`
+- Path structure: `/{equipment_id}/{document_id}/{filename}`
+- RLS policies enforce visibility and permission rules
+
+#### Access Control
+
+- **View/Download**: Authenticated users see all documents; anonymous users see only public documents
+- **Create/Update/Delete**: User must be admin OR maintainer of the linked equipment
+
+---
+
 ## 7. Data Model & Relationships (High Level)
 
 ### 7.1 Core Entities
@@ -306,6 +398,7 @@ The parser supports various bank CSV formats with flexible column detection:
 - Has many maintainers
 - Has many inductions
 - Has many bookings
+- Has many documents
 
 #### Induction
 - Joins one user and one piece of equipment
@@ -330,6 +423,10 @@ The parser supports various bank CSV formats with flexible column detection:
 - May belong to one user (matched member)
 - May reference a user who performed the match
 
+#### Document
+- Belongs to one piece of equipment
+- Uploaded by one user (maintainer or admin)
+
 ---
 
 ## 8. CRUD Interfaces
@@ -341,6 +438,7 @@ The application will provide administrative and member-facing CRUD pages for:
 - Inductions
 - Bookings
 - Projects
+- Documents (maintainers manage per-equipment, inline on equipment detail page)
 - Transactions (admin only - import, view, match/unmatch)
 
 Interfaces should prioritise clarity and ease of use over density of information.
@@ -508,143 +606,60 @@ equipment_usage_log
 
 ---
 
-### 12.3 Document Store
+### 12.3 Document Store - Extended Features
 
-**Summary:** A flexible file storage system where users can upload documents, organise them with tags, and attach them to multiple entities (equipment, projects, etc.) with configurable visibility.
+> **Note:** Equipment documents have been promoted to a core feature (see section 6.7). This section captures remaining ideas for future expansion.
 
-**Problem:** Currently there's no centralised place for:
-- Members to store project files, designs, and notes
-- Sharing equipment manuals, guides, and templates with other members
-- Publishing resources that could benefit the wider maker community
+**Summary:** Extend the equipment documents feature to support project attachments, standalone documents, and multi-entity linking.
 
-Files end up scattered across personal drives, Discord, email, and the wiki with no consistent organisation.
+#### Future: Project Attachments
 
-**Proposed Solution:**
-
-A document store with flexible visibility and multi-entity attachment.
-
-#### Visibility Model
-
-Documents have two visibility options:
-
-1. **Inherit from parent** - Visibility determined by what it's attached to
-   - Attached to equipment → visible to members
-   - Attached to private project → visible to project owner only
-   - Attached to public project → visible to everyone
-
-2. **Explicit visibility** - Override with specific setting
-   - Private (owner only)
-   - Members (logged-in members)
-   - Public (anyone)
-
-This allows scenarios like:
-- A public PDF manual attached to equipment (anyone can download)
-- A members-only settings file attached to same equipment
-- A private work-in-progress attached to a public project
-
-#### Multi-Entity Attachment
-
-A single document can be attached to **multiple entities**:
-- One safety guide PDF linked to 3 different laser cutters
-- One template file linked to equipment AND a tutorial project
-- Standalone documents with no attachment (general resources)
-
-This avoids duplication and keeps documents in sync across related items.
-
-#### Organisation
-
-Documents are organised using **tags/categories** rather than folders:
-- Tags like: `manual`, `safety`, `template`, `settings`, `tutorial`
-- Category groupings: `Equipment Docs`, `Project Files`, `Guides`
-- Search and filter by tags
-- Equipment and projects show their attached documents inline
-
-#### Permissions
-
-Who can attach/update documents depends on the entity:
-
-| Entity Type | Who can manage documents |
-|-------------|-------------------------|
-| **Equipment with maintainer or induction required** | Maintainers and admins only |
-| **Low-level equipment** (no maintainer, no induction) | Any member |
-| **Projects** | Project owner |
-| **Standalone documents** | Creator (private), Admins (members/public) |
-
-This respects the existing trust model - critical equipment documentation is controlled, but casual equipment is open to community contribution.
-
-#### Features
-
-- **Upload** - Drag-and-drop, multi-file upload
-- **Attach** - Link to one or more equipment, projects, or standalone
-- **Organise** - Tags and categories
-- **Preview** - In-browser preview for PDFs, images, text, STL (3D viewer)
-- **Download** - Direct download, shareable URLs for public files
-- **Search** - Find by name, tag, entity, or content type
-
-#### Use Cases
-
-**Equipment attachments:**
-- PDF manuals and datasheets
-- Material settings spreadsheets (laser power/speed tables)
-- Safety procedures
-- Quick-reference cards
-
-**Project attachments:**
+Allow members to attach documents to their projects:
 - STL/3MF files for 3D printing
 - DXF/SVG files for laser cutting
 - CAD source files
 - Build instructions and notes
 - Photos of finished work
 
-**Standalone documents:**
+**Considerations:**
+- Project owner manages their own documents
+- Visibility could inherit from project (public/private)
+- Storage quotas may be needed per user
+
+#### Future: Standalone Documents
+
+Documents not attached to any entity, for general resources:
 - General workshop safety guide
 - Hackspace policies
 - Beginner tutorials
 - Event materials
 
-#### Data Model
+**Considerations:**
+- Who can create standalone documents? (Admins only, or any member for private?)
+- How to organise/discover them? (Dedicated documents page, search)
 
-```
-documents
-- id
-- filename
-- storage_path
-- file_size
-- mime_type
-- visibility (enum: inherit, private, members, public)
-- uploaded_by (FK to profiles)
-- title (display name)
-- description
-- tags (text array)
-- category
-- created_at
-- updated_at
+#### Future: Multi-Entity Attachment
 
-document_attachments
-- id
-- document_id (FK)
-- entity_type (enum: equipment, project)
-- entity_id (uuid)
-- attached_by (FK to profiles)
-- attached_at
-```
+Allow one document to be linked to multiple entities:
+- One safety guide PDF linked to 3 different laser cutters
+- One template file linked to equipment AND a tutorial project
 
-Note: A document with no entries in `document_attachments` is standalone.
+**Considerations:**
+- Requires junction table (`document_attachments`)
+- Permission model becomes complex (who can unlink?)
+- May not be worth the complexity - duplicate uploads are simple
 
-#### Storage
+#### Future: Enhanced Preview
 
-- Supabase Storage bucket: `documents`
-- RLS policies check visibility + attachment permissions
-- File size limit: 50MB per file (configurable)
-- Supported formats: PDF, images, STL/3MF, DXF/SVG, text, Office docs
+- 3D viewer for STL files
+- SVG inline rendering
+- Text/code file preview with syntax highlighting
 
-#### Considerations
+#### Future: Search
 
-- Start with equipment attachments (highest value, clearest use case)
-- Add project attachments and standalone docs in later iteration
-- Preview support can be progressive (PDFs first, then images, then 3D)
-- Monitor storage usage - may need quotas per user for private files
-- Consider virus/malware scanning for uploaded files
+Global document search across all equipment:
+- Find by name, tag, file type
+- Filter by equipment category
 
 ---
 
