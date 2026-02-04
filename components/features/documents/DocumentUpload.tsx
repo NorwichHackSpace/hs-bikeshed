@@ -21,11 +21,12 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useDocumentStore } from '@/stores'
+import type { Document } from '@/types/database'
 
 interface DocumentUploadProps {
   open: boolean
   onClose: () => void
-  equipmentId: string
+  onUploaded?: (document: Document) => void
 }
 
 const ALLOWED_TYPES = [
@@ -53,7 +54,7 @@ const validationSchema = Yup.object({
   is_public: Yup.boolean(),
 })
 
-export function DocumentUpload({ open, onClose, equipmentId }: DocumentUploadProps) {
+export function DocumentUpload({ open, onClose, onUploaded }: DocumentUploadProps) {
   const [file, setFile] = useState<File | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
@@ -74,12 +75,13 @@ export function DocumentUpload({ open, onClose, equipmentId }: DocumentUploadPro
       }
 
       try {
-        await uploadDocument(equipmentId, file, {
+        const doc = await uploadDocument(file, {
           title: values.title,
           description: values.description || undefined,
           tags: values.tags,
           is_public: values.is_public,
         })
+        if (onUploaded) onUploaded(doc)
         handleClose()
       } catch {
         // Error handled by store
