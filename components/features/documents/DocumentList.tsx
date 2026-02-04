@@ -9,36 +9,45 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
+import LinkIcon from '@mui/icons-material/Link'
 import { useDocumentStore } from '@/stores'
 import { DocumentCard } from './DocumentCard'
-import { DocumentUpload } from './DocumentUpload'
 import { DocumentEditDialog } from './DocumentEditDialog'
 import { DocumentPreview } from './DocumentPreview'
+import { DocumentLinkAutocomplete } from './DocumentLinkAutocomplete'
 import { createClient } from '@/lib/supabase/client'
 import type { Document } from '@/types/database'
 
 interface DocumentListProps {
-  equipmentId: string
+  equipmentId?: string
+  projectId?: string
   canManage: boolean
 }
 
-export function DocumentList({ equipmentId, canManage }: DocumentListProps) {
-  const { documents, loading, error, deleteDocument } = useDocumentStore()
-  const [uploadOpen, setUploadOpen] = useState(false)
+export function DocumentList({ equipmentId, projectId, canManage }: DocumentListProps) {
+  const {
+    linkedDocuments,
+    loading,
+    error,
+    unlinkDocumentFromEquipment,
+    unlinkDocumentFromProject,
+    linkDocumentToEquipment,
+    linkDocumentToProject,
+  } = useDocumentStore()
+  const [linkOpen, setLinkOpen] = useState(false)
   const [editDocument, setEditDocument] = useState<Document | null>(null)
   const [previewDocument, setPreviewDocument] = useState<Document | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
 
-  // Get all unique tags
+  const documents = linkedDocuments
+
   const allTags = useMemo(() => {
     const tags = new Set<string>()
     documents.forEach((doc) => doc.tags.forEach((tag) => tags.add(tag)))
     return Array.from(tags).sort()
   }, [documents])
 
-  // Filter documents by selected tag
   const filteredDocuments = useMemo(() => {
     if (!selectedTag) return documents
     return documents.filter((doc) => doc.tags.includes(selectedTag))
@@ -48,14 +57,12 @@ export function DocumentList({ equipmentId, canManage }: DocumentListProps) {
     const supabase = createClient()
 
     if (doc.is_public) {
-      // Public files can use direct URL
       return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/equipment-documents/${doc.storage_path}`
     }
 
-    // Private files need signed URL
     const { data } = await supabase.storage
       .from('equipment-documents')
-      .createSignedUrl(doc.storage_path, 3600) // 1 hour expiry
+      .createSignedUrl(doc.storage_path, 3600)
 
     return data?.signedUrl ?? ''
   }, [])
@@ -76,11 +83,23 @@ export function DocumentList({ equipmentId, canManage }: DocumentListProps) {
     window.open(url, '_blank')
   }, [getDownloadUrl])
 
-  const handleDelete = useCallback(async (doc: Document) => {
-    if (confirm(`Delete "${doc.title}"? This cannot be undone.`)) {
-      await deleteDocument(doc.id)
+  const handleUnlink = useCallback(async (doc: Document) => {
+    if (confirm(`Unlink "${doc.title}"? The document will remain in the library.`)) {
+      if (equipmentId) {
+        await unlinkDocumentFromEquipment(doc.id, equipmentId)
+      } else if (projectId) {
+        await unlinkDocumentFromProject(doc.id, projectId)
+      }
     }
-  }, [deleteDocument])
+  }, [equipmentId, projectId, unlinkDocumentFromEquipment, unlinkDocumentFromProject])
+
+  const handleLink = useCallback(async (doc: Document) => {
+    if (equipmentId) {
+      await linkDocumentToEquipment(doc.id, equipmentId)
+    } else if (projectId) {
+      await linkDocumentToProject(doc.id, projectId)
+    }
+  }, [equipmentId, projectId, linkDocumentToEquipment, linkDocumentToProject])
 
   if (loading && documents.length === 0) {
     return (
@@ -92,19 +111,18 @@ export function DocumentList({ equipmentId, canManage }: DocumentListProps) {
 
   return (
     <Box>
-      {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Typography variant="h6" fontWeight={600}>
           Documents
         </Typography>
         {canManage && (
           <Button
-            variant="contained"
+            variant="outlined"
             size="small"
-            startIcon={<AddIcon />}
-            onClick={() => setUploadOpen(true)}
+            startIcon={<LinkIcon />}
+            onClick={() => setLinkOpen(true)}
           >
-            Add Document
+            Link Document
           </Button>
         )}
       </Box>
@@ -115,7 +133,6 @@ export function DocumentList({ equipmentId, canManage }: DocumentListProps) {
         </Alert>
       )}
 
-      {/* Tag filter */}
       {allTags.length > 0 && (
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
           <Chip
@@ -136,11 +153,10 @@ export function DocumentList({ equipmentId, canManage }: DocumentListProps) {
         </Box>
       )}
 
-      {/* Document grid */}
       {filteredDocuments.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
           {documents.length === 0
-            ? 'No documents uploaded yet.'
+            ? 'No documents linked yet.'
             : 'No documents match the selected filter.'}
         </Typography>
       ) : (
@@ -158,18 +174,19 @@ export function DocumentList({ equipmentId, canManage }: DocumentListProps) {
               canEdit={canManage}
               onPreview={() => handlePreview(doc)}
               onEdit={() => setEditDocument(doc)}
-              onDelete={() => handleDelete(doc)}
+              onDelete={() => handleUnlink(doc)}
               onDownload={() => handleDownload(doc)}
+              deleteLabel="Unlink"
             />
           ))}
         </Box>
       )}
 
-      {/* Dialogs */}
-      <DocumentUpload
-        open={uploadOpen}
-        onClose={() => setUploadOpen(false)}
-        equipmentId={equipmentId}
+      <DocumentLinkAutocomplete
+        open={linkOpen}
+        onClose={() => setLinkOpen(false)}
+        onLink={handleLink}
+        excludeDocumentIds={documents.map(d => d.id)}
       />
 
       <DocumentEditDialog
