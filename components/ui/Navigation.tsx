@@ -28,6 +28,7 @@ import BuildIcon from '@mui/icons-material/Build'
 import EventIcon from '@mui/icons-material/Event'
 import SchoolIcon from '@mui/icons-material/School'
 import FolderIcon from '@mui/icons-material/Folder'
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import PersonIcon from '@mui/icons-material/Person'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import DescriptionIcon from '@mui/icons-material/Description'
@@ -44,6 +45,7 @@ const navItems = [
   { label: 'Bookings', href: '/bookings', icon: <EventIcon /> },
   { label: 'Inductions', href: '/inductions', icon: <SchoolIcon /> },
   { label: 'Projects', href: '/projects', icon: <FolderIcon /> },
+  { label: 'Documents', href: '/documents', icon: <InsertDriveFileIcon /> },
   { label: 'Design Doc', href: '/design', icon: <DescriptionIcon /> },
 ]
 
