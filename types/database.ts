@@ -643,10 +643,96 @@ export type Database = {
           },
         ]
       }
+      document_equipment_links: {
+        Row: {
+          document_id: string
+          equipment_id: string
+          linked_by: string
+          linked_at: string
+        }
+        Insert: {
+          document_id: string
+          equipment_id: string
+          linked_by: string
+          linked_at?: string
+        }
+        Update: {
+          document_id?: string
+          equipment_id?: string
+          linked_by?: string
+          linked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_equipment_links_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_equipment_links_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_equipment_links_linked_by_fkey"
+            columns: ["linked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_project_links: {
+        Row: {
+          document_id: string
+          project_id: string
+          linked_by: string
+          linked_at: string
+        }
+        Insert: {
+          document_id: string
+          project_id: string
+          linked_by: string
+          linked_at?: string
+        }
+        Update: {
+          document_id?: string
+          project_id?: string
+          linked_by?: string
+          linked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_project_links_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_project_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_project_links_linked_by_fkey"
+            columns: ["linked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           id: string
-          equipment_id: string
+          equipment_id: string | null
           filename: string
           storage_path: string
           file_size: number
@@ -661,7 +747,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          equipment_id: string
+          equipment_id?: string | null
           filename: string
           storage_path: string
           file_size: number
@@ -751,6 +837,14 @@ export type TransactionImport = Database["public"]["Tables"]["transaction_import
 
 // Document types
 export type Document = Database["public"]["Tables"]["documents"]["Row"]
+export type DocumentEquipmentLink = Database["public"]["Tables"]["document_equipment_links"]["Row"]
+export type DocumentProjectLink = Database["public"]["Tables"]["document_project_links"]["Row"]
+
+// Document with link counts for library view
+export interface DocumentWithLinkCounts extends Document {
+  equipment_count?: number
+  project_count?: number
+}
 
 // Transaction with joined user profile
 export interface TransactionWithUser extends Transaction {
