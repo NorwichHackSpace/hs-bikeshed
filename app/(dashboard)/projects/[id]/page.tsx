@@ -33,10 +33,11 @@ import LockIcon from '@mui/icons-material/Lock'
 import SendIcon from '@mui/icons-material/Send'
 import { useRouter, useParams } from 'next/navigation'
 import { getClient } from '@/lib/supabase/client'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore, useDocumentStore } from '@/stores'
 import type { Project, ProjectUpdate, Profile } from '@/types/database'
 import { ProjectDialog } from '@/components/features/ProjectDialog'
 import { ImageUpload } from '@/components/features/ImageUpload'
+import { DocumentList } from '@/components/features/documents'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 
@@ -72,6 +73,7 @@ export default function ProjectDetailPage() {
   const params = useParams()
   const projectId = params.id as string
   const { profile } = useAuthStore()
+  const { fetchDocumentsForProject, clearLinkedDocuments } = useDocumentStore()
 
   const [project, setProject] = useState<ProjectWithAuthor | null>(null)
   const [updates, setUpdates] = useState<UpdateWithAuthor[]>([])
@@ -133,7 +135,12 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     fetchProject()
-  }, [fetchProject])
+    fetchDocumentsForProject(projectId)
+
+    return () => {
+      clearLinkedDocuments()
+    }
+  }, [fetchProject, fetchDocumentsForProject, projectId, clearLinkedDocuments])
 
   const handleEditProject = async (data: Partial<Project>) => {
     const supabase = getClient()
@@ -370,6 +377,16 @@ export default function ProjectDetailPage() {
               ))}
             </Box>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Documents Section */}
+      <Card sx={{ mb: 4 }}>
+        <CardContent>
+          <DocumentList
+            projectId={projectId}
+            canManage={isOwner}
+          />
         </CardContent>
       </Card>
 
