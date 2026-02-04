@@ -115,8 +115,8 @@ export default function EquipmentPage() {
       {equipment.length === 0 ? (
         <Card
           sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)',
+            color: '#000',
           }}
         >
           <CardContent sx={{ textAlign: 'center', py: 8 }}>
@@ -125,7 +125,7 @@ export default function EquipmentPage() {
                 width: 80,
                 height: 80,
                 borderRadius: '50%',
-                backgroundColor: alpha('#ffffff', 0.2),
+                backgroundColor: alpha('#000000', 0.1),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -150,7 +150,7 @@ export default function EquipmentPage() {
               onClick={handleAdd}
               sx={{
                 backgroundColor: 'white',
-                color: '#764ba2',
+                color: '#000',
                 '&:hover': {
                   backgroundColor: alpha('#ffffff', 0.9),
                 },

@@ -1,0 +1,883 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  TextField,
+  Typography,
+  Alert,
+  alpha,
+  Stepper,
+  Step,
+  StepLabel,
+  FormControlLabel,
+  Checkbox,
+  Radio,
+  RadioGroup,
+  FormControl,
+  FormLabel,
+  FormHelperText,
+  Divider,
+  CircularProgress,
+} from '@mui/material'
+import PersonAddIcon from '@mui/icons-material/PersonAdd'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useFormik } from 'formik'
+import * as Yup from 'yup'
+import { getClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
+
+const STEPS = [
+  'Personal Info',
+  'Address',
+  'About You',
+  'Emergency Contact',
+  'Agreements',
+]
+
+interface ProfileFormValues {
+  firstName: string
+  lastName: string
+  phone: string
+  addressLine1: string
+  addressLine2: string
+  city: string
+  county: string
+  postcode: string
+  country: string
+  interestsSkills: string
+  hadTour: boolean
+  hackspaceGoals: string
+  shareDetailsWithMembers: 'yes' | 'no' | 'discuss'
+  referralSource: string
+  emergencyContactName: string
+  emergencyContactRelationship: string
+  emergencyContactMobile: string
+  emergencyContactLandline: string
+  hasMedicalConditions: boolean
+  medicalConditionsDetails: string
+  acceptedPolicies: boolean
+  acceptedSafetyResponsibility: boolean
+  isOver18: boolean
+  standingOrderConfirmed: boolean
+  optInCommunications: boolean
+  optInMarketing: boolean
+}
+
+const validationSchema = Yup.object({
+  // Step 1: Personal Info
+  firstName: Yup.string().required('First name is required'),
+  lastName: Yup.string().required('Last name is required'),
+  phone: Yup.string().required('Phone number is required'),
+
+  // Step 2: Address
+  addressLine1: Yup.string().required('Address is required'),
+  addressLine2: Yup.string(),
+  city: Yup.string().required('City is required'),
+  county: Yup.string().required('County is required'),
+  postcode: Yup.string().required('Postcode is required'),
+  country: Yup.string().required('Country is required'),
+
+  // Step 3: About You
+  interestsSkills: Yup.string().required('Please tell us about your interests and skills'),
+  hadTour: Yup.boolean(),
+  hackspaceGoals: Yup.string().required('Please tell us what you hope to get from the hackspace'),
+  shareDetailsWithMembers: Yup.string()
+    .oneOf(['yes', 'no', 'discuss'])
+    .required('Please select an option'),
+  referralSource: Yup.string().required('Please tell us how you heard about us'),
+
+  // Step 4: Emergency Contact
+  emergencyContactName: Yup.string().required('Emergency contact name is required'),
+  emergencyContactRelationship: Yup.string().required('Relationship is required'),
+  emergencyContactMobile: Yup.string().required('Mobile number is required'),
+  emergencyContactLandline: Yup.string(),
+  hasMedicalConditions: Yup.boolean(),
+  medicalConditionsDetails: Yup.string().when('hasMedicalConditions', {
+    is: true,
+    then: (schema) => schema.required('Please provide details of your medical conditions'),
+  }),
+
+  // Step 5: Agreements
+  acceptedPolicies: Yup.boolean()
+    .oneOf([true], 'You must read and accept the policies')
+    .required(),
+  acceptedSafetyResponsibility: Yup.boolean()
+    .oneOf([true], 'You must accept responsibility for your own safety')
+    .required(),
+  isOver18: Yup.boolean()
+    .oneOf([true], 'You must be over 18 to join')
+    .required(),
+  standingOrderConfirmed: Yup.boolean()
+    .oneOf([true], 'You must set up a standing order')
+    .required(),
+  optInCommunications: Yup.boolean(),
+  optInMarketing: Yup.boolean(),
+})
+
+// Fields to validate per step
+const stepFields: (keyof ProfileFormValues)[][] = [
+  ['firstName', 'lastName', 'phone'],
+  ['addressLine1', 'city', 'county', 'postcode', 'country'],
+  ['interestsSkills', 'hackspaceGoals', 'shareDetailsWithMembers', 'referralSource'],
+  ['emergencyContactName', 'emergencyContactRelationship', 'emergencyContactMobile'],
+  ['acceptedPolicies', 'acceptedSafetyResponsibility', 'isOver18', 'standingOrderConfirmed'],
+]
+
+export default function CompleteProfilePage() {
+  const router = useRouter()
+  const [activeStep, setActiveStep] = useState(0)
+  const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const supabase = getClient()
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        router.push('/login')
+        return
+      }
+
+      // Check if profile already exists
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (profile) {
+        // Profile exists, redirect to equipment
+        router.push('/equipment')
+        return
+      }
+
+      setUser(user)
+      setLoading(false)
+    }
+
+    checkUser()
+  }, [router])
+
+  const formik = useFormik<ProfileFormValues>({
+    initialValues: {
+      firstName: '',
+      lastName: '',
+      phone: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      county: '',
+      postcode: '',
+      country: 'United Kingdom',
+      interestsSkills: '',
+      hadTour: false,
+      hackspaceGoals: '',
+      shareDetailsWithMembers: 'no',
+      referralSource: '',
+      emergencyContactName: '',
+      emergencyContactRelationship: '',
+      emergencyContactMobile: '',
+      emergencyContactLandline: '',
+      hasMedicalConditions: false,
+      medicalConditionsDetails: '',
+      acceptedPolicies: false,
+      acceptedSafetyResponsibility: false,
+      isOver18: false,
+      standingOrderConfirmed: false,
+      optInCommunications: false,
+      optInMarketing: false,
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      if (!user) return
+
+      setError(null)
+      const supabase = getClient()
+
+      try {
+        const { error: insertError } = await supabase.from('profiles').insert({
+          id: user.id,
+          name: `${values.firstName} ${values.lastName}`.trim(),
+          first_name: values.firstName,
+          last_name: values.lastName,
+          email: user.email,
+          phone: values.phone,
+          address_line1: values.addressLine1,
+          address_line2: values.addressLine2 || null,
+          city: values.city,
+          county: values.county,
+          postcode: values.postcode,
+          country: values.country,
+          interests_skills: values.interestsSkills,
+          had_tour: values.hadTour,
+          hackspace_goals: values.hackspaceGoals,
+          share_details_with_members: values.shareDetailsWithMembers,
+          accepted_policies: values.acceptedPolicies,
+          accepted_safety_responsibility: values.acceptedSafetyResponsibility,
+          is_over_18: values.isOver18,
+          standing_order_confirmed: values.standingOrderConfirmed,
+          has_medical_conditions: values.hasMedicalConditions,
+          medical_conditions_details: values.medicalConditionsDetails || null,
+          emergency_contact_name: values.emergencyContactName,
+          emergency_contact_relationship: values.emergencyContactRelationship,
+          emergency_contact_mobile: values.emergencyContactMobile,
+          emergency_contact_landline: values.emergencyContactLandline || null,
+          referral_source: values.referralSource,
+          opt_in_communications: values.optInCommunications,
+          opt_in_marketing: values.optInMarketing,
+          membership_status: 'active',
+          join_date: new Date().toISOString().split('T')[0],
+        })
+
+        if (insertError) throw insertError
+
+        setSuccess(true)
+        // Redirect after a short delay
+        setTimeout(() => {
+          router.push('/equipment')
+        }, 2000)
+      } catch (err) {
+        setError((err as Error).message)
+      }
+    },
+  })
+
+  const validateStep = async () => {
+    const fields = stepFields[activeStep]
+    const errors = await formik.validateForm()
+
+    // Touch all fields in current step
+    const touchedFields: Record<string, boolean> = {}
+    fields.forEach((field) => {
+      touchedFields[field] = true
+    })
+    formik.setTouched({ ...formik.touched, ...touchedFields })
+
+    // Check if any current step fields have errors
+    return !fields.some((field) => errors[field])
+  }
+
+  const handleNext = async () => {
+    const isValid = await validateStep()
+    if (isValid) {
+      setActiveStep((prev) => prev + 1)
+    }
+  }
+
+  const handleBack = () => {
+    setActiveStep((prev) => prev - 1)
+  }
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #1a1f37 0%, #0f1225 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress sx={{ color: '#F9B233' }} />
+      </Box>
+    )
+  }
+
+  if (success) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #1a1f37 0%, #0f1225 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 2,
+        }}
+      >
+        <Container maxWidth="sm">
+          <Card
+            sx={{
+              borderRadius: 3,
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <CardContent sx={{ p: 6, textAlign: 'center' }}>
+              <Box
+                sx={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #17AD37 0%, #4caf50 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 3,
+                }}
+              >
+                <CheckCircleIcon sx={{ color: 'white', fontSize: 40 }} />
+              </Box>
+              <Typography variant="h5" fontWeight={600} gutterBottom>
+                Profile Complete!
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 3 }}>
+                Welcome to Norwich Hackspace! Redirecting you to the equipment page...
+              </Typography>
+              <CircularProgress size={24} sx={{ color: '#F9B233' }} />
+            </CardContent>
+          </Card>
+        </Container>
+      </Box>
+    )
+  }
+
+  const renderStepContent = () => {
+    switch (activeStep) {
+      case 0:
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="First Name"
+                name="firstName"
+                value={formik.values.firstName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                helperText={formik.touched.firstName && formik.errors.firstName}
+                required
+              />
+              <TextField
+                fullWidth
+                label="Last Name"
+                name="lastName"
+                value={formik.values.lastName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                helperText={formik.touched.lastName && formik.errors.lastName}
+                required
+              />
+            </Box>
+            <TextField
+              fullWidth
+              label="Phone Number"
+              name="phone"
+              value={formik.values.phone}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.phone && Boolean(formik.errors.phone)}
+              helperText={formik.touched.phone && formik.errors.phone}
+              required
+            />
+            {user?.email && (
+              <TextField
+                fullWidth
+                label="Email"
+                value={user.email}
+                disabled
+                helperText="Email from your Google account"
+              />
+            )}
+          </Box>
+        )
+
+      case 1:
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Address Line 1"
+              name="addressLine1"
+              value={formik.values.addressLine1}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
+              helperText={formik.touched.addressLine1 && formik.errors.addressLine1}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Address Line 2"
+              name="addressLine2"
+              value={formik.values.addressLine2}
+              onChange={formik.handleChange}
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="City"
+                name="city"
+                value={formik.values.city}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.city && Boolean(formik.errors.city)}
+                helperText={formik.touched.city && formik.errors.city}
+                required
+              />
+              <TextField
+                fullWidth
+                label="County"
+                name="county"
+                value={formik.values.county}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.county && Boolean(formik.errors.county)}
+                helperText={formik.touched.county && formik.errors.county}
+                required
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Postcode"
+                name="postcode"
+                value={formik.values.postcode}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.postcode && Boolean(formik.errors.postcode)}
+                helperText={formik.touched.postcode && formik.errors.postcode}
+                required
+              />
+              <TextField
+                fullWidth
+                label="Country"
+                name="country"
+                value={formik.values.country}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.country && Boolean(formik.errors.country)}
+                helperText={formik.touched.country && formik.errors.country}
+                required
+              />
+            </Box>
+          </Box>
+        )
+
+      case 2:
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Interests, Skills or Qualifications"
+              name="interestsSkills"
+              value={formik.values.interestsSkills}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.interestsSkills && Boolean(formik.errors.interestsSkills)}
+              helperText={
+                (formik.touched.interestsSkills && formik.errors.interestsSkills) ||
+                'Tell us about your background and what you can bring to the hackspace'
+              }
+              required
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="hadTour"
+                  checked={formik.values.hadTour}
+                  onChange={formik.handleChange}
+                />
+              }
+              label="I have had a guided tour of the hackspace"
+            />
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="What do you most want from Norwich Hackspace?"
+              name="hackspaceGoals"
+              value={formik.values.hackspaceGoals}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.hackspaceGoals && Boolean(formik.errors.hackspaceGoals)}
+              helperText={formik.touched.hackspaceGoals && formik.errors.hackspaceGoals}
+              required
+            />
+            <FormControl
+              error={
+                formik.touched.shareDetailsWithMembers &&
+                Boolean(formik.errors.shareDetailsWithMembers)
+              }
+            >
+              <FormLabel>Can we share your contact details with other members?</FormLabel>
+              <RadioGroup
+                name="shareDetailsWithMembers"
+                value={formik.values.shareDetailsWithMembers}
+                onChange={formik.handleChange}
+                row
+              >
+                <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="no" control={<Radio />} label="No" />
+                <FormControlLabel value="discuss" control={<Radio />} label="Let's discuss" />
+              </RadioGroup>
+              {formik.touched.shareDetailsWithMembers && formik.errors.shareDetailsWithMembers && (
+                <FormHelperText>{formik.errors.shareDetailsWithMembers}</FormHelperText>
+              )}
+            </FormControl>
+            <TextField
+              fullWidth
+              label="How did you hear about us?"
+              name="referralSource"
+              value={formik.values.referralSource}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.referralSource && Boolean(formik.errors.referralSource)}
+              helperText={formik.touched.referralSource && formik.errors.referralSource}
+              required
+            />
+          </Box>
+        )
+
+      case 3:
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Emergency Contact Information
+            </Typography>
+            <TextField
+              fullWidth
+              label="Contact Name"
+              name="emergencyContactName"
+              value={formik.values.emergencyContactName}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={
+                formik.touched.emergencyContactName &&
+                Boolean(formik.errors.emergencyContactName)
+              }
+              helperText={
+                formik.touched.emergencyContactName && formik.errors.emergencyContactName
+              }
+              required
+            />
+            <TextField
+              fullWidth
+              label="Relationship to You"
+              name="emergencyContactRelationship"
+              value={formik.values.emergencyContactRelationship}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={
+                formik.touched.emergencyContactRelationship &&
+                Boolean(formik.errors.emergencyContactRelationship)
+              }
+              helperText={
+                formik.touched.emergencyContactRelationship &&
+                formik.errors.emergencyContactRelationship
+              }
+              placeholder="e.g. Partner, Parent, Friend"
+              required
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Mobile Number"
+                name="emergencyContactMobile"
+                value={formik.values.emergencyContactMobile}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.emergencyContactMobile &&
+                  Boolean(formik.errors.emergencyContactMobile)
+                }
+                helperText={
+                  formik.touched.emergencyContactMobile && formik.errors.emergencyContactMobile
+                }
+                required
+              />
+              <TextField
+                fullWidth
+                label="Landline (Optional)"
+                name="emergencyContactLandline"
+                value={formik.values.emergencyContactLandline}
+                onChange={formik.handleChange}
+              />
+            </Box>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Medical Information
+            </Typography>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="hasMedicalConditions"
+                  checked={formik.values.hasMedicalConditions}
+                  onChange={formik.handleChange}
+                />
+              }
+              label="I have disabilities or medical conditions the hackspace should be aware of"
+            />
+            {formik.values.hasMedicalConditions && (
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                label="Please provide details"
+                name="medicalConditionsDetails"
+                value={formik.values.medicalConditionsDetails}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.medicalConditionsDetails &&
+                  Boolean(formik.errors.medicalConditionsDetails)
+                }
+                helperText={
+                  (formik.touched.medicalConditionsDetails &&
+                    formik.errors.medicalConditionsDetails) ||
+                  'This information will be kept confidential and only used in emergencies'
+                }
+                required
+              />
+            )}
+          </Box>
+        )
+
+      case 4:
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Please read and agree to the following:
+            </Typography>
+
+            <FormControl
+              error={formik.touched.acceptedPolicies && Boolean(formik.errors.acceptedPolicies)}
+            >
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="acceptedPolicies"
+                    checked={formik.values.acceptedPolicies}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    I have read and understood the{' '}
+                    <a
+                      href="https://wiki.norwichhackspace.org/index.php?title=Rules_of_Engagement"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#F9B233' }}
+                    >
+                      Rules of Engagement
+                    </a>{' '}
+                    and{' '}
+                    <a
+                      href="https://wiki.norwichhackspace.org/index.php?title=Safety"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#F9B233' }}
+                    >
+                      Safety Policies
+                    </a>
+                  </Typography>
+                }
+              />
+              {formik.touched.acceptedPolicies && formik.errors.acceptedPolicies && (
+                <FormHelperText>{formik.errors.acceptedPolicies}</FormHelperText>
+              )}
+            </FormControl>
+
+            <FormControl
+              error={
+                formik.touched.acceptedSafetyResponsibility &&
+                Boolean(formik.errors.acceptedSafetyResponsibility)
+              }
+            >
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="acceptedSafetyResponsibility"
+                    checked={formik.values.acceptedSafetyResponsibility}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label="I understand that I am responsible for my own safety whilst at the hackspace"
+              />
+              {formik.touched.acceptedSafetyResponsibility &&
+                formik.errors.acceptedSafetyResponsibility && (
+                  <FormHelperText>{formik.errors.acceptedSafetyResponsibility}</FormHelperText>
+                )}
+            </FormControl>
+
+            <FormControl error={formik.touched.isOver18 && Boolean(formik.errors.isOver18)}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="isOver18"
+                    checked={formik.values.isOver18}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label="I confirm that I am over 18 years of age"
+              />
+              {formik.touched.isOver18 && formik.errors.isOver18 && (
+                <FormHelperText>{formik.errors.isOver18}</FormHelperText>
+              )}
+            </FormControl>
+
+            <FormControl
+              error={
+                formik.touched.standingOrderConfirmed &&
+                Boolean(formik.errors.standingOrderConfirmed)
+              }
+            >
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="standingOrderConfirmed"
+                    checked={formik.values.standingOrderConfirmed}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label="I have set up a standing order for a minimum of £15/month"
+              />
+              {formik.touched.standingOrderConfirmed && formik.errors.standingOrderConfirmed && (
+                <FormHelperText>{formik.errors.standingOrderConfirmed}</FormHelperText>
+              )}
+            </FormControl>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Communication Preferences (Optional)
+            </Typography>
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="optInCommunications"
+                  checked={formik.values.optInCommunications}
+                  onChange={formik.handleChange}
+                />
+              }
+              label="I would like to receive news and updates from Norwich Hackspace"
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="optInMarketing"
+                  checked={formik.values.optInMarketing}
+                  onChange={formik.handleChange}
+                />
+              }
+              label="I am happy to be included in promotional materials and photos"
+            />
+          </Box>
+        )
+
+      default:
+        return null
+    }
+  }
+
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1a1f37 0%, #0f1225 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4,
+        px: 2,
+      }}
+    >
+      <Container maxWidth="md">
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Box
+            sx={{
+              width: 64,
+              height: 64,
+              borderRadius: 3,
+              background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2,
+              boxShadow: '0 8px 24px rgba(249, 178, 51, 0.3)',
+            }}
+          >
+            <PersonAddIcon sx={{ color: '#000', fontSize: 32 }} />
+          </Box>
+          <Typography variant="h4" fontWeight={700} color="white" gutterBottom>
+            Complete Your Profile
+          </Typography>
+          <Typography variant="body1" sx={{ color: alpha('#ffffff', 0.7) }}>
+            Please complete your membership details to continue
+          </Typography>
+        </Box>
+
+        <Card
+          sx={{
+            borderRadius: 3,
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <CardContent sx={{ p: 4 }}>
+            <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
+              {STEPS.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
+
+            <form onSubmit={formik.handleSubmit}>
+              {renderStepContent()}
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                <Button
+                  disabled={activeStep === 0}
+                  onClick={handleBack}
+                  variant="outlined"
+                >
+                  Back
+                </Button>
+
+                {activeStep === STEPS.length - 1 ? (
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={formik.isSubmitting}
+                  >
+                    {formik.isSubmitting ? 'Creating profile...' : 'Complete Profile'}
+                  </Button>
+                ) : (
+                  <Button variant="contained" onClick={handleNext}>
+                    Next
+                  </Button>
+                )}
+              </Box>
+            </form>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
+  )
+}

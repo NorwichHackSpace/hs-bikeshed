@@ -271,7 +271,7 @@ export default function ProjectsPage() {
                   <Box
                     sx={{
                       height: 160,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -355,7 +355,7 @@ export default function ProjectsPage() {
                           width: 24,
                           height: 24,
                           fontSize: '0.75rem',
-                          background: 'linear-gradient(135deg, #7928CA 0%, #FF0080 100%)',
+                          background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)', color: '#000',
                         }}
                       >
                         {project.profiles?.name?.charAt(0).toUpperCase() ?? '?'}

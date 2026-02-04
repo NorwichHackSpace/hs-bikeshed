@@ -291,7 +291,7 @@ export default function ProjectDetailPage() {
                 width: 24,
                 height: 24,
                 fontSize: '0.75rem',
-                background: 'linear-gradient(135deg, #7928CA 0%, #FF0080 100%)',
+                background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)', color: '#000',
               }}
             >
               {project.profiles?.name?.charAt(0).toUpperCase() ?? '?'}
@@ -448,7 +448,7 @@ export default function ProjectDetailPage() {
                         width: 32,
                         height: 32,
                         fontSize: '0.875rem',
-                        background: 'linear-gradient(135deg, #7928CA 0%, #FF0080 100%)',
+                        background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)', color: '#000',
                       }}
                     >
                       {update.profiles?.name?.charAt(0).toUpperCase() ?? '?'}

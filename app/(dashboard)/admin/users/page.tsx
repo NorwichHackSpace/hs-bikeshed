@@ -523,7 +523,7 @@ export default function AdminUsersPage() {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar
                           sx={{
-                            background: 'linear-gradient(135deg, #7928CA 0%, #FF0080 100%)',
+                            background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)', color: '#000',
                           }}
                         >
                           {user.name?.charAt(0).toUpperCase() ?? '?'}
@@ -614,7 +614,7 @@ export default function AdminUsersPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar
               sx={{
-                background: 'linear-gradient(135deg, #7928CA 0%, #FF0080 100%)',
+                background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)', color: '#000',
               }}
             >
               {editingUser?.name?.charAt(0).toUpperCase() ?? '?'}

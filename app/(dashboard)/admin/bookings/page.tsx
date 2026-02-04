@@ -121,7 +121,7 @@ export default function AdminBookingsPage() {
               width: 32,
               height: 32,
               fontSize: '0.875rem',
-              background: 'linear-gradient(135deg, #7928CA 0%, #FF0080 100%)',
+              background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)', color: '#000',
             }}
           >
             {params.row.profiles?.name?.charAt(0).toUpperCase() ?? '?'}

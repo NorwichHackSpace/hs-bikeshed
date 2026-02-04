@@ -184,7 +184,7 @@ export default function MaintainersPage() {
                         sx={{
                           width: 48,
                           height: 48,
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)', color: '#000',
                           fontWeight: 600,
                         }}
                       >

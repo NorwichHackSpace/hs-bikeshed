@@ -32,7 +32,9 @@ import PersonIcon from '@mui/icons-material/Person'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import DescriptionIcon from '@mui/icons-material/Description'
 import HandymanIcon from '@mui/icons-material/Handyman'
-import { useAuthStore } from '@/stores'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import { useAuthStore, useThemeStore } from '@/stores'
 
 const DRAWER_WIDTH = 280
 
@@ -59,6 +61,7 @@ export function Navigation() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const { profile, isAdmin, isMaintainer, signOut } = useAuthStore()
+  const { mode, toggleTheme } = useThemeStore()
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -76,9 +79,18 @@ export function Navigation() {
   }
 
   const handleSignOut = async () => {
+    console.log('Sign out clicked')
     handleMenuClose()
-    await signOut()
-    router.push('/login')
+    try {
+      console.log('Calling signOut...')
+      await signOut()
+      console.log('SignOut completed')
+    } catch (err) {
+      console.error('SignOut error:', err)
+    } finally {
+      console.log('Redirecting to /login')
+      router.push('/login')
+    }
   }
 
   const handleNavClick = (href: string) => {
@@ -173,7 +185,7 @@ export function Navigation() {
               >
                 <ListItemIcon
                   sx={{
-                    color: isSelected ? '#ffffff' : alpha('#ffffff', 0.7),
+                    color: isSelected ? '#F9B233' : alpha('#ffffff', 0.7),
                     minWidth: 44,
                   }}
                 >
@@ -181,10 +193,12 @@ export function Navigation() {
                 </ListItemIcon>
                 <ListItemText
                   primary={item.label}
-                  primaryTypographyProps={{
-                    fontWeight: isSelected ? 600 : 400,
-                    fontSize: '0.875rem',
-                    color: isSelected ? '#ffffff' : alpha('#ffffff', 0.8),
+                  slotProps={{
+                    primary: {
+                      fontWeight: isSelected ? 600 : 400,
+                      fontSize: '0.875rem',
+                      color: isSelected ? '#ffffff' : alpha('#ffffff', 0.8),
+                    },
                   }}
                 />
               </ListItemButton>
@@ -209,9 +223,10 @@ export function Navigation() {
             sx={{
               width: 36,
               height: 36,
-              background: 'linear-gradient(135deg, #7928CA 0%, #FF0080 100%)',
+              background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)',
               fontSize: '0.875rem',
               fontWeight: 600,
+              color: '#000',
             }}
           >
             {profile?.name?.charAt(0).toUpperCase() ?? '?'}
@@ -255,9 +270,9 @@ export function Navigation() {
         sx={{
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           ml: { md: `${DRAWER_WIDTH}px` },
-          backgroundColor: alpha('#ffffff', 0.8),
+          backgroundColor: alpha('#121218', 0.8),
           backdropFilter: 'saturate(200%) blur(30px)',
-          borderBottom: `1px solid ${alpha('#000000', 0.05)}`,
+          borderBottom: `1px solid ${alpha('#ffffff', 0.05)}`,
         }}
       >
         <Toolbar sx={{ px: { xs: 2, sm: 3 } }}>
@@ -279,8 +294,9 @@ export function Navigation() {
               sx={{
                 width: 40,
                 height: 40,
-                background: 'linear-gradient(135deg, #7928CA 0%, #FF0080 100%)',
+                background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)',
                 fontWeight: 600,
+                color: '#000',
               }}
             >
               {profile?.name?.charAt(0).toUpperCase() ?? '?'}
@@ -325,6 +341,23 @@ export function Navigation() {
               My Profile
             </MenuItem>
             <MenuItem
+              onClick={() => {
+                toggleTheme()
+                handleMenuClose()
+              }}
+              sx={{ py: 1.5 }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                {mode === 'dark' ? (
+                  <LightModeIcon fontSize="small" />
+                ) : (
+                  <DarkModeIcon fontSize="small" />
+                )}
+              </ListItemIcon>
+              {mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            </MenuItem>
+            <Divider />
+            <MenuItem
               onClick={handleSignOut}
               sx={{ py: 1.5, color: 'error.main' }}
             >
@@ -347,8 +380,8 @@ export function Navigation() {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: DRAWER_WIDTH,
-              background: 'linear-gradient(195deg, #1a1f37 0%, #0f1225 100%)',
-              borderRight: 'none',
+              backgroundColor: '#1E1E26',
+              borderRight: `1px solid ${alpha('#ffffff', 0.05)}`,
             },
           }}
         >
@@ -361,8 +394,8 @@ export function Navigation() {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: DRAWER_WIDTH,
-              background: 'linear-gradient(195deg, #1a1f37 0%, #0f1225 100%)',
-              borderRight: 'none',
+              backgroundColor: '#1E1E26',
+              borderRight: `1px solid ${alpha('#ffffff', 0.05)}`,
             },
           }}
           open

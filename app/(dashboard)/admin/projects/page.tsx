@@ -196,7 +196,7 @@ export default function AdminProjectsPage() {
               width: 28,
               height: 28,
               fontSize: '0.75rem',
-              background: 'linear-gradient(135deg, #7928CA 0%, #FF0080 100%)',
+              background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)', color: '#000',
             }}
           >
             {params.row.profiles?.name?.charAt(0).toUpperCase() ?? '?'}

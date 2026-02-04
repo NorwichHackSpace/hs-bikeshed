@@ -190,7 +190,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      const { error } = await supabase.auth.signOut()
+      const { error } = await supabase.auth.signOut({ scope: 'local' })
       if (error) throw error
       set({ user: null, session: null, profile: null, roles: [] })
     } catch (error) {
