@@ -37,6 +37,7 @@ import {
   Divider,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
 import SearchIcon from '@mui/icons-material/Search'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useRouter } from 'next/navigation'
@@ -223,6 +224,9 @@ export default function AdminUsersPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState(0)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletingUser, setDeletingUser] = useState<UserWithRoles | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   // Form state for editing
   const [editForm, setEditForm] = useState({
@@ -441,6 +445,52 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleDeleteClick = (user: UserWithRoles) => {
+    setDeletingUser(user)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingUser) return
+
+    const supabase = getClient()
+    setDeleting(true)
+    setError(null)
+
+    try {
+      // Delete related records first
+      const { error: rolesError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', deletingUser.id)
+
+      if (rolesError) throw rolesError
+
+      const { error: maintainerError } = await supabase
+        .from('equipment_maintainers')
+        .delete()
+        .eq('user_id', deletingUser.id)
+
+      if (maintainerError) throw maintainerError
+
+      // Delete the profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', deletingUser.id)
+
+      if (profileError) throw profileError
+
+      await fetchUsers()
+      setDeleteDialogOpen(false)
+      setDeletingUser(null)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const filteredUsers = users.filter((user) => {
     const query = searchQuery.toLowerCase()
     return (
@@ -589,6 +639,14 @@ export default function AdminUsersPage() {
                         title="Edit user"
                       >
                         <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteClick(user)}
+                        title="Delete user"
+                      >
+                        <DeleteIcon />
                       </IconButton>
                     </TableCell>
                   </TableRow>
@@ -956,6 +1014,29 @@ export default function AdminUsersPage() {
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Delete User</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete <strong>{deletingUser?.name}</strong>? This will remove their profile, roles, and equipment assignments. This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleDeleteConfirm}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
