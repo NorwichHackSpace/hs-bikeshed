@@ -633,21 +633,23 @@ export default function AdminUsersPage() {
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleEditClick(user)}
-                        title="Edit user"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeleteClick(user)}
-                        title="Delete user"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditClick(user)}
+                          title="Edit user"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteClick(user)}
+                          title="Delete user"
+                        >
+                          <DeleteIcon color="error" />
+                        </IconButton>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}

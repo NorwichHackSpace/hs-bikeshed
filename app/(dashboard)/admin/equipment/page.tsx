@@ -12,12 +12,19 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  Card,
+  CardContent,
+  Grid,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
+import ViewListIcon from '@mui/icons-material/ViewList'
+import ViewModuleIcon from '@mui/icons-material/ViewModule'
 import { useRouter } from 'next/navigation'
 import { getClient } from '@/lib/supabase/client'
 import type { Equipment } from '@/types/database'
@@ -38,6 +45,7 @@ export default function AdminEquipmentPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingEquipment, setDeletingEquipment] = useState<Equipment | null>(null)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   const fetchEquipment = useCallback(async () => {
     const supabase = getClient()
@@ -228,9 +236,24 @@ export default function AdminEquipmentPage() {
             Manage all hackspace equipment
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
-          Add Equipment
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(_, value) => value && setViewMode(value)}
+            size="small"
+          >
+            <ToggleButton value="grid" title="Grid view">
+              <ViewModuleIcon />
+            </ToggleButton>
+            <ToggleButton value="list" title="List view">
+              <ViewListIcon />
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
+            Add Equipment
+          </Button>
+        </Box>
       </Box>
 
       {error && (
@@ -239,27 +262,86 @@ export default function AdminEquipmentPage() {
         </Alert>
       )}
 
-      <Box sx={{ height: 600, width: '100%' }}>
-        <DataGrid
-          rows={equipment}
-          columns={columns}
-          loading={loading}
-          pageSizeOptions={[10, 25, 50, 100]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 25 } },
-            sorting: { sortModel: [{ field: 'name', sort: 'asc' }] },
-          }}
-          disableRowSelectionOnClick
-          getRowHeight={() => 'auto'}
-          sx={{
-            '& .MuiDataGrid-cell': {
-              display: 'flex',
-              alignItems: 'center',
-              py: 1,
-            },
-          }}
-        />
-      </Box>
+      {viewMode === 'list' ? (
+        <Box sx={{ height: 600, width: '100%' }}>
+          <DataGrid
+            rows={equipment}
+            columns={columns}
+            loading={loading}
+            pageSizeOptions={[10, 25, 50, 100]}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 25 } },
+              sorting: { sortModel: [{ field: 'name', sort: 'asc' }] },
+            }}
+            disableRowSelectionOnClick
+            getRowHeight={() => 'auto'}
+            sx={{
+              '& .MuiDataGrid-cell': {
+                display: 'flex',
+                alignItems: 'center',
+                py: 1,
+              },
+            }}
+          />
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {equipment.map((item) => (
+            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={item.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      {item.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <IconButton size="small" onClick={() => handleEdit(item)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" color="error" onClick={() => handleDeleteClick(item)}>
+                        <DeleteIcon fontSize="small" color="error" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                  {item.model && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {item.model}
+                    </Typography>
+                  )}
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
+                    {item.category && (
+                      <Chip label={item.category} size="small" variant="outlined" />
+                    )}
+                    {item.status && (
+                      <Chip
+                        label={item.status.replace('_', ' ')}
+                        color={statusColors[item.status] || 'default'}
+                        size="small"
+                        sx={{ textTransform: 'capitalize' }}
+                      />
+                    )}
+                    {item.risk_level && (
+                      <Chip label={item.risk_level} size="small" variant="outlined" />
+                    )}
+                    {item.induction_required && (
+                      <Chip label="Induction required" size="small" color="primary" />
+                    )}
+                    {item.require_booking && (
+                      <Chip label="Booking required" size="small" color="secondary" />
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <EquipmentDialog
         open={dialogOpen}

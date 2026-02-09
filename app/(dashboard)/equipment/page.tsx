@@ -14,9 +14,14 @@ import {
   Button,
   Fab,
   alpha,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material'
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import AddIcon from '@mui/icons-material/Add'
 import BuildIcon from '@mui/icons-material/Build'
+import ViewListIcon from '@mui/icons-material/ViewList'
+import ViewModuleIcon from '@mui/icons-material/ViewModule'
 import { useEquipmentStore, type EquipmentWithMaintainers } from '@/stores'
 import { EquipmentDialog } from '@/components/features/EquipmentDialog'
 import { getCategorySlug } from '@/lib/utils'
@@ -50,6 +55,7 @@ export default function EquipmentPage() {
   const { equipment, loading, initialized, error, fetchEquipment, createEquipment } =
     useEquipmentStore()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   useEffect(() => {
     fetchEquipment()
@@ -67,6 +73,91 @@ export default function EquipmentPage() {
   const handleSave = async (data: Partial<Equipment>) => {
     await createEquipment(data as Omit<Equipment, 'id' | 'created_at' | 'updated_at'>)
   }
+
+  const listColumns: GridColDef[] = [
+    {
+      field: 'name',
+      headerName: 'Name',
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      field: 'model',
+      headerName: 'Model',
+      flex: 1,
+      minWidth: 120,
+    },
+    {
+      field: 'category',
+      headerName: 'Category',
+      width: 140,
+      renderCell: (params: GridRenderCellParams) =>
+        params.value ? (
+          <Chip label={params.value} size="small" variant="outlined" />
+        ) : (
+          '-'
+        ),
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      width: 130,
+      renderCell: (params: GridRenderCellParams) =>
+        params.value ? (
+          <Chip
+            label={params.value.replace('_', ' ')}
+            color={statusColors[params.value] || 'default'}
+            size="small"
+            sx={{ textTransform: 'capitalize' }}
+          />
+        ) : (
+          '-'
+        ),
+    },
+    {
+      field: 'risk_level',
+      headerName: 'Risk',
+      width: 100,
+      renderCell: (params: GridRenderCellParams) =>
+        params.value ? (
+          <Chip label={params.value} size="small" variant="outlined" />
+        ) : (
+          '-'
+        ),
+    },
+    {
+      field: 'induction_required',
+      headerName: 'Induction',
+      width: 110,
+      renderCell: (params: GridRenderCellParams) =>
+        params.value ? (
+          <Chip label="Required" size="small" color="primary" />
+        ) : (
+          <Chip label="No" size="small" variant="outlined" />
+        ),
+    },
+    {
+      field: 'require_booking',
+      headerName: 'Booking',
+      width: 110,
+      renderCell: (params: GridRenderCellParams) =>
+        params.value ? (
+          <Chip label="Required" size="small" color="secondary" />
+        ) : (
+          <Chip label="No" size="small" variant="outlined" />
+        ),
+    },
+    {
+      field: 'maintainers',
+      headerName: 'Maintainers',
+      flex: 1,
+      minWidth: 150,
+      sortable: false,
+      filterable: false,
+      valueGetter: (_value: unknown, row: EquipmentWithMaintainers) =>
+        row.maintainers?.map((m) => m.name).join(', ') || '',
+    },
+  ]
 
   if (!initialized && loading) {
     return (
@@ -102,14 +193,29 @@ export default function EquipmentPage() {
             Browse available equipment and check induction requirements.
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-          sx={{ display: { xs: 'none', sm: 'flex' } }}
-        >
-          Add Equipment
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(_, value) => value && setViewMode(value)}
+            size="small"
+          >
+            <ToggleButton value="grid" title="Grid view">
+              <ViewModuleIcon />
+            </ToggleButton>
+            <ToggleButton value="list" title="List view">
+              <ViewListIcon />
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAdd}
+            sx={{ display: { xs: 'none', sm: 'flex' } }}
+          >
+            Add Equipment
+          </Button>
+        </Box>
       </Box>
 
       {equipment.length === 0 ? (
@@ -160,7 +266,7 @@ export default function EquipmentPage() {
             </Button>
           </CardContent>
         </Card>
-      ) : (
+      ) : viewMode === 'grid' ? (
         <Grid container spacing={3}>
           {equipment.map((item) => (
             <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={item.id}>
@@ -331,6 +437,29 @@ export default function EquipmentPage() {
             </Grid>
           ))}
         </Grid>
+      ) : (
+        <Box sx={{ height: 600, width: '100%' }}>
+          <DataGrid
+            rows={equipment}
+            columns={listColumns}
+            loading={loading}
+            pageSizeOptions={[10, 25, 50]}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 25 } },
+              sorting: { sortModel: [{ field: 'name', sort: 'asc' }] },
+            }}
+            disableRowSelectionOnClick
+            onRowClick={(params) => handleCardClick(params.row)}
+            sx={{
+              cursor: 'pointer',
+              '& .MuiDataGrid-cell': {
+                display: 'flex',
+                alignItems: 'center',
+                py: 1,
+              },
+            }}
+          />
+        </Box>
       )}
 
       {/* Floating action button for mobile */}
