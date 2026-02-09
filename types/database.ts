@@ -154,6 +154,67 @@ export type Database = {
           },
         ]
       }
+      equipment_usage_log: {
+        Row: {
+          id: string
+          equipment_id: string
+          user_id: string
+          started_at: string
+          ended_at: string | null
+          duration_minutes: number | null
+          source: "booking" | "manual" | "check_in"
+          notes: string | null
+          booking_id: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          equipment_id: string
+          user_id: string
+          started_at?: string
+          ended_at?: string | null
+          duration_minutes?: number | null
+          source?: "booking" | "manual" | "check_in"
+          notes?: string | null
+          booking_id?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          equipment_id?: string
+          user_id?: string
+          started_at?: string
+          ended_at?: string | null
+          duration_minutes?: number | null
+          source?: "booking" | "manual" | "check_in"
+          notes?: string | null
+          booking_id?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_usage_log_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_usage_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_usage_log_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       induction_requests: {
         Row: {
           equipment_id: string
@@ -839,6 +900,23 @@ export type TransactionImport = Database["public"]["Tables"]["transaction_import
 export type Document = Database["public"]["Tables"]["documents"]["Row"]
 export type DocumentEquipmentLink = Database["public"]["Tables"]["document_equipment_links"]["Row"]
 export type DocumentProjectLink = Database["public"]["Tables"]["document_project_links"]["Row"]
+
+// Usage log types
+export type EquipmentUsageLog = Database["public"]["Tables"]["equipment_usage_log"]["Row"]
+export type UsageSource = EquipmentUsageLog["source"]
+
+// Usage log with joined equipment details
+export interface UsageLogWithEquipment extends EquipmentUsageLog {
+  equipment?: Equipment | null
+}
+
+// Usage summary for equipment detail page
+export interface EquipmentUsageSummary {
+  totalSessions: number
+  totalMinutes: number
+  sessionsThisMonth: number
+  uniqueUsers: number
+}
 
 // Document with link counts for library view
 export interface DocumentWithLinkCounts extends Document {

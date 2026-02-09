@@ -18,12 +18,19 @@ import {
   ImageList,
   ImageListItem,
   Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditIcon from '@mui/icons-material/Edit'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
-import { useEquipmentStore, useInductionStore, useBookingStore, useAuthStore, useDocumentStore } from '@/stores'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
+import { useEquipmentStore, useInductionStore, useBookingStore, useAuthStore, useDocumentStore, useUsageLogStore } from '@/stores'
+import type { EquipmentUsageSummary } from '@/types/database'
 import { EquipmentForm } from '@/components/features/EquipmentForm'
 import { BookingDialog } from '@/components/features/BookingDialog'
 import { DocumentList } from '@/components/features/documents'
@@ -68,9 +75,15 @@ export default function EquipmentDetailPage() {
   } = useInductionStore()
   const { myBookings, fetchMyBookings, deleteBooking } = useBookingStore()
   const { fetchDocumentsForEquipment, clearLinkedDocuments } = useDocumentStore()
+  const { logUsage, fetchEquipmentUsageSummary } = useUsageLogStore()
   const [isEditing, setIsEditing] = useState(false)
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [requestingInduction, setRequestingInduction] = useState(false)
+  const [usageDialogOpen, setUsageDialogOpen] = useState(false)
+  const [usageDuration, setUsageDuration] = useState('')
+  const [usageNotes, setUsageNotes] = useState('')
+  const [loggingUsage, setLoggingUsage] = useState(false)
+  const [usageSummary, setUsageSummary] = useState<EquipmentUsageSummary | null>(null)
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -102,13 +115,14 @@ export default function EquipmentDetailPage() {
       fetchMyRequests()
       fetchMyBookings()
       fetchDocumentsForEquipment(equipmentId)
+      fetchEquipmentUsageSummary(equipmentId).then(setUsageSummary)
     }
 
     return () => {
       clearSelected()
       clearLinkedDocuments()
     }
-  }, [equipmentId, fetchEquipmentById, fetchMyInductions, fetchMyRequests, fetchMyBookings, fetchDocumentsForEquipment, clearSelected, clearLinkedDocuments])
+  }, [equipmentId, fetchEquipmentById, fetchMyInductions, fetchMyRequests, fetchMyBookings, fetchDocumentsForEquipment, fetchEquipmentUsageSummary, clearSelected, clearLinkedDocuments])
 
   const handleRequestInduction = async () => {
     setRequestingInduction(true)
@@ -127,6 +141,35 @@ export default function EquipmentDetailPage() {
       })
     } finally {
       setRequestingInduction(false)
+    }
+  }
+
+  const handleLogUsage = async () => {
+    setLoggingUsage(true)
+    try {
+      await logUsage({
+        equipment_id: equipmentId,
+        duration_minutes: usageDuration ? parseInt(usageDuration, 10) : null,
+        notes: usageNotes || null,
+      })
+      setSnackbar({
+        open: true,
+        message: 'Usage logged successfully!',
+        severity: 'success',
+      })
+      setUsageDialogOpen(false)
+      setUsageDuration('')
+      setUsageNotes('')
+      // Refresh summary
+      fetchEquipmentUsageSummary(equipmentId).then(setUsageSummary)
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: (err as Error).message || 'Failed to log usage',
+        severity: 'error',
+      })
+    } finally {
+      setLoggingUsage(false)
     }
   }
 
@@ -454,6 +497,40 @@ export default function EquipmentDetailPage() {
               </>
             )}
 
+            {/* Usage */}
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+              Usage
+            </Typography>
+            {usageSummary && (
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                  <Typography variant="h6" fontWeight={600}>
+                    {usageSummary.sessionsThisMonth}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    This month
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                  <Typography variant="h6" fontWeight={600}>
+                    {usageSummary.totalSessions}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    All time
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={<PlayArrowIcon />}
+              onClick={() => setUsageDialogOpen(true)}
+            >
+              Log Usage
+            </Button>
+
             {/* Actions */}
             {item.require_booking && item.status === 'operational' && (
               <>
@@ -543,6 +620,54 @@ export default function EquipmentDetailPage() {
           </Paper>
         </Box>
       </Box>
+
+      {/* Log Usage Dialog */}
+      <Dialog
+        open={usageDialogOpen}
+        onClose={() => setUsageDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Log Equipment Usage</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Record that you used {item.name}.
+          </Typography>
+          <TextField
+            fullWidth
+            label="Duration (minutes)"
+            type="number"
+            value={usageDuration}
+            onChange={(e) => setUsageDuration(e.target.value)}
+            placeholder="e.g. 30"
+            helperText="Optional"
+            sx={{ mb: 2 }}
+            slotProps={{ htmlInput: { min: 1 } }}
+          />
+          <TextField
+            fullWidth
+            label="Notes"
+            value={usageNotes}
+            onChange={(e) => setUsageNotes(e.target.value)}
+            placeholder="What did you work on?"
+            multiline
+            rows={2}
+            helperText="Optional"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUsageDialogOpen(false)} disabled={loggingUsage}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleLogUsage}
+            disabled={loggingUsage}
+          >
+            {loggingUsage ? 'Logging...' : 'Log Usage'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}

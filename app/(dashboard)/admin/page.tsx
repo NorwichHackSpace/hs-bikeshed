@@ -15,6 +15,7 @@ import SchoolIcon from '@mui/icons-material/School'
 import EventIcon from '@mui/icons-material/Event'
 import FolderIcon from '@mui/icons-material/Folder'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
+import BarChartIcon from '@mui/icons-material/BarChart'
 
 const adminSections = [
   {
@@ -58,6 +59,13 @@ const adminSections = [
     icon: <AccountBalanceIcon sx={{ fontSize: 48 }} />,
     href: '/admin/transactions',
     color: '#00897B',
+  },
+  {
+    title: 'Usage',
+    description: 'Equipment usage reports and insights',
+    icon: <BarChartIcon sx={{ fontSize: 48 }} />,
+    href: '/admin/usage',
+    color: '#FF6D00',
   },
 ]
 

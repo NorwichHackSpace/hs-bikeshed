@@ -33,6 +33,7 @@ import PersonIcon from '@mui/icons-material/Person'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import DescriptionIcon from '@mui/icons-material/Description'
 import HandymanIcon from '@mui/icons-material/Handyman'
+import BarChartIcon from '@mui/icons-material/BarChart'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
 import LightModeIcon from '@mui/icons-material/LightMode'
 import { useAuthStore, useThemeStore } from '@/stores'
@@ -41,6 +42,7 @@ const DRAWER_WIDTH = 280
 
 const navItems = [
   { label: 'My Profile', href: '/profile', icon: <PersonIcon /> },
+  { label: 'My Usage', href: '/usage', icon: <BarChartIcon /> },
   { label: 'Equipment', href: '/equipment', icon: <BuildIcon /> },
   { label: 'Bookings', href: '/bookings', icon: <EventIcon /> },
   { label: 'Inductions', href: '/inductions', icon: <SchoolIcon /> },

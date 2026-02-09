@@ -419,6 +419,96 @@ document_project_links
 
 ---
 
+### 6.8 Equipment Usage Log
+
+Track equipment usage over time to understand which tools are most valuable to the community and inform maintenance, purchasing, and space planning decisions.
+
+#### Problem
+
+The hackspace has no visibility into which equipment is actually being used. This makes it difficult to:
+- Justify purchases of new equipment
+- Prioritise maintenance efforts
+- Identify underutilised equipment that could be promoted or retired
+- Make data-informed decisions about the space
+
+#### Usage Tracking Methods
+
+Usage is recorded through three complementary methods, implemented in phases:
+
+1. **Booking-based (automatic)**
+   - Every completed booking creates a usage log entry automatically
+   - Duration derived from booking start/end times
+   - No extra action required from members
+
+2. **Simple "I used this" button (manual)**
+   - One-tap logging on the equipment detail page
+   - Members can optionally enter duration
+   - Quick way to record ad-hoc or walk-up usage
+
+3. **Check-in/Check-out (future)**
+   - Member taps to start and end a session
+   - More accurate duration tracking
+   - Could use QR codes on equipment
+
+#### Permissions
+
+| Action | Who Can Do It |
+|--------|---------------|
+| Log usage (manual) | Any authenticated member |
+| View own usage history | Any authenticated member |
+| View equipment usage summary | Any authenticated member |
+| View aggregated reports/dashboard | Administrator |
+
+#### User Experience
+
+**Equipment detail page:**
+- "Log Usage" button for one-tap manual logging
+- Usage summary: "X sessions this month" with trend indicator
+- Members see their own recent usage of this equipment
+
+**Member profile / My Usage page:**
+- Personal usage history across all equipment
+- Filter by date range and equipment
+
+**Admin dashboard (`/admin/usage`):**
+- Popular equipment - most used items by session count or total hours
+- Usage trends - daily/weekly/monthly patterns
+- Peak times - when equipment is busiest (inform booking availability)
+- User engagement - how many unique members use each item
+- Underutilised equipment - items that might need promotion or training
+
+#### Data Model
+
+```
+equipment_usage_log
+- id (uuid)
+- equipment_id (FK to equipment)
+- user_id (FK to profiles)
+- started_at (timestamp)
+- ended_at (timestamp, nullable)
+- duration_minutes (integer)
+- source (enum: booking, manual, check_in)
+- notes (text, optional)
+- booking_id (FK to bookings, nullable - links to booking if applicable)
+- created_at
+```
+
+#### Privacy Considerations
+
+- Admin reports show aggregated data, not individual member usage
+- Members can only see their own usage history
+- Equipment detail pages show session counts, not who used it
+- Admin reports focus on equipment popularity, not member surveillance
+
+#### Implementation Phases
+
+1. **Phase 1: Manual logging** - "Log Usage" button on equipment detail page with optional duration and notes
+2. **Phase 2: Booking integration** - Automatically create usage log entries when bookings are completed
+3. **Phase 3: Reporting** - Admin usage dashboard with charts and insights
+4. **Phase 4: Check-in/Check-out** - Session-based tracking (if needed)
+
+---
+
 ## 7. Data Model & Relationships (High Level)
 
 ### 7.1 Core Entities
@@ -427,6 +517,7 @@ document_project_links
 - Has many projects
 - Has many bookings
 - Has many inductions
+- Has many usage log entries
 - May be a maintainer for many pieces of equipment
 
 #### Equipment
@@ -434,6 +525,7 @@ document_project_links
 - Has many inductions
 - Has many bookings
 - Has many linked documents (via document_equipment_links)
+- Has many usage log entries
 
 #### Induction
 - Joins one user and one piece of equipment
@@ -465,6 +557,12 @@ document_project_links
 - Can be linked to many projects
 - Uploaded by any authenticated member
 - Edited/deleted by uploader or admin
+
+#### Equipment Usage Log
+- Belongs to one piece of equipment
+- Belongs to one user
+- May reference one booking (for booking-based entries)
+- Tracks source (booking, manual, check_in)
 
 ---
 
@@ -570,78 +668,7 @@ equipment_consumables
 
 ### 12.2 Equipment Usage Log
 
-**Summary:** Track equipment usage over time to understand which tools are most valuable to the community and inform future decisions.
-
-**Problem:** The hackspace has no visibility into which equipment is actually being used. This makes it difficult to:
-- Justify purchases of new equipment
-- Prioritise maintenance efforts
-- Identify underutilised equipment that could be promoted or retired
-- Make data-informed decisions about the space
-
-**Proposed Solution:**
-
-Log usage events for equipment with:
-- **User** - Who used it (optional anonymisation for reports)
-- **Equipment** - What was used
-- **Timestamp** - When it was used
-- **Duration** - How long (estimated or actual)
-- **Source** - How the usage was recorded
-
-**Usage Tracking Methods:**
-
-1. **Booking-based (automatic)**
-   - Every completed booking creates a usage log entry
-   - Duration derived from booking start/end times
-   - Low friction - no extra action required
-
-2. **Check-in/Check-out (manual)**
-   - Member taps/scans to start and end a session
-   - More accurate for walk-up usage
-   - Could use QR codes on equipment
-
-3. **Simple "I used this" button**
-   - One-tap logging on equipment detail page
-   - Quick way to record ad-hoc usage
-   - Less accurate but very low friction
-
-**Insights & Reports:**
-
-- **Popular equipment** - Most used items by session count or total hours
-- **Usage trends** - Daily/weekly/monthly patterns
-- **Peak times** - When equipment is busiest (inform booking availability)
-- **User engagement** - How many unique members use each item
-- **Underutilised equipment** - Items that might need promotion or training
-
-**User Experience:**
-- Members can view their own usage history
-- Admins see aggregated reports and dashboards
-- Equipment detail page shows "X sessions this month" or similar
-
-**Data Model:**
-```
-equipment_usage_log
-- id
-- equipment_id (FK)
-- user_id (FK, nullable for anonymous)
-- started_at
-- ended_at (nullable for simple check-ins)
-- duration_minutes
-- source (enum: booking, check_in, manual)
-- booking_id (FK, nullable - links to booking if applicable)
-- created_at
-```
-
-**Privacy Considerations:**
-- Reports should show aggregated data, not individual usage
-- Members can see their own history
-- Consider opt-out for usage tracking
-- Admin reports focus on equipment popularity, not member surveillance
-
-**Considerations:**
-- Start with booking-based tracking (already have the data)
-- Add manual logging later if needed
-- Keep reporting simple - avoid analysis paralysis
-- Focus on actionable insights for the community
+> **Note:** Equipment Usage Log has been promoted to a core feature (see section 6.8).
 
 ---
 
