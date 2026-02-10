@@ -16,12 +16,15 @@ import {
   alpha,
   ToggleButtonGroup,
   ToggleButton,
+  TextField,
+  InputAdornment,
 } from '@mui/material'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import AddIcon from '@mui/icons-material/Add'
 import BuildIcon from '@mui/icons-material/Build'
 import ViewListIcon from '@mui/icons-material/ViewList'
 import ViewModuleIcon from '@mui/icons-material/ViewModule'
+import SearchIcon from '@mui/icons-material/Search'
 import { useEquipmentStore, type EquipmentWithMaintainers } from '@/stores'
 import { EquipmentDialog } from '@/components/features/EquipmentDialog'
 import { getCategorySlug } from '@/lib/utils'
@@ -56,6 +59,7 @@ export default function EquipmentPage() {
     useEquipmentStore()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     fetchEquipment()
@@ -73,6 +77,17 @@ export default function EquipmentPage() {
   const handleSave = async (data: Partial<Equipment>) => {
     await createEquipment(data as Omit<Equipment, 'id' | 'created_at' | 'updated_at'>)
   }
+
+  const filteredEquipment = equipment.filter((item) => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      item.name?.toLowerCase().includes(query) ||
+      item.model?.toLowerCase().includes(query) ||
+      item.category?.toLowerCase().includes(query) ||
+      item.description?.toLowerCase().includes(query)
+    )
+  })
 
   const listColumns: GridColDef[] = [
     {
@@ -218,6 +233,24 @@ export default function EquipmentPage() {
         </Box>
       </Box>
 
+      <TextField
+        placeholder="Search equipment..."
+        size="small"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        fullWidth
+        sx={{ mb: 3 }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
+
       {equipment.length === 0 ? (
         <Card
           sx={{
@@ -266,9 +299,20 @@ export default function EquipmentPage() {
             </Button>
           </CardContent>
         </Card>
+      ) : filteredEquipment.length === 0 ? (
+        <Card>
+          <CardContent sx={{ textAlign: 'center', py: 6 }}>
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No equipment found
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              No results matching &quot;{searchQuery}&quot;
+            </Typography>
+          </CardContent>
+        </Card>
       ) : viewMode === 'grid' ? (
         <Grid container spacing={3}>
-          {equipment.map((item) => (
+          {filteredEquipment.map((item) => (
             <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={item.id}>
               <Card
                 onClick={() => handleCardClick(item)}
@@ -440,7 +484,7 @@ export default function EquipmentPage() {
       ) : (
         <Box sx={{ height: 600, width: '100%' }}>
           <DataGrid
-            rows={equipment}
+            rows={filteredEquipment}
             columns={listColumns}
             loading={loading}
             pageSizeOptions={[10, 25, 50]}
