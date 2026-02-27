@@ -23,6 +23,8 @@ interface AuthActions {
   signOut: () => Promise<void>
   fetchProfile: () => Promise<void>
   updateProfile: (updates: Partial<Profile>) => Promise<void>
+  setProfile: (profile: Profile | null) => void
+  setRoles: (roles: UserRole[]) => void
   hasRole: (role: UserRole) => boolean
   isAdmin: () => boolean
   isMaintainer: () => boolean
@@ -51,7 +53,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       if (session) {
         set({ user: session.user, session })
-        await get().fetchProfile()
       }
     } catch (error) {
       set({ error: (error as Error).message })
@@ -63,11 +64,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       supabase.auth.onAuthStateChange(async (_event, session) => {
         set({ user: session?.user ?? null, session })
 
-        if (session?.user) {
-          await get().fetchProfile()
-        } else {
+        if (!session?.user) {
           set({ profile: null, roles: [] })
         }
+        // Profile and roles are now fetched by TanStack Query hooks
       })
     }
   },
@@ -232,6 +232,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     } finally {
       set({ loading: false })
     }
+  },
+
+  setProfile: (profile) => {
+    set({ profile })
+  },
+
+  setRoles: (roles) => {
+    set({ roles })
   },
 
   hasRole: (role) => {

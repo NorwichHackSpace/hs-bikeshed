@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Box, CircularProgress } from '@mui/material'
-import { useAuthStore, useAppStore } from '@/stores'
+import { useAuthStore } from '@/stores'
+import { useProfile, useUserRoles } from '@/lib/queries'
 import { isProfileComplete } from '@/lib/profileValidation'
 
 interface AuthProviderProps {
@@ -14,61 +15,63 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter()
   const initialize = useAuthStore((state) => state.initialize)
   const user = useAuthStore((state) => state.user)
-  const profile = useAuthStore((state) => state.profile)
-  const roles = useAuthStore((state) => state.roles)
-  const initializeApp = useAppStore((state) => state.initializeApp)
-  const appInitialized = useAppStore((state) => state.initialized)
+  const setProfile = useAuthStore((state) => state.setProfile)
+  const setRoles = useAuthStore((state) => state.setRoles)
   const [authInitialized, setAuthInitialized] = useState(false)
   const initStarted = useRef(false)
 
+  // Phase 1: Initialize auth session (Supabase session check)
   useEffect(() => {
-    // Prevent double initialization in React 18 Strict Mode
     if (initStarted.current) return
     initStarted.current = true
-
     initialize().then(() => setAuthInitialized(true))
   }, [initialize])
 
-  // Initialize app data after auth is ready and user has roles
-  useEffect(() => {
-    if (authInitialized && user && roles.length > 0 && !appInitialized) {
-      initializeApp()
-    }
-  }, [authInitialized, user, roles, appInitialized, initializeApp])
+  // Phase 2: Fetch profile and roles via TanStack Query (automatic retries)
+  const {
+    data: profile,
+    isLoading: profileLoading,
+  } = useProfile(authInitialized ? user?.id : undefined)
 
+  const {
+    data: roles,
+    isLoading: rolesLoading,
+  } = useUserRoles(authInitialized ? user?.id : undefined)
+
+  // Sync query results back to Zustand store for backward compatibility
+  useEffect(() => {
+    setProfile(profile ?? null)
+  }, [profile, setProfile])
+
+  useEffect(() => {
+    setRoles(roles ?? [])
+  }, [roles, setRoles])
+
+  // Phase 3: Handle redirects
   useEffect(() => {
     if (!authInitialized) return
+    if (!user) return
 
-    // If user is authenticated but profile is incomplete, redirect to complete profile
-    if (user && profile && !isProfileComplete(profile)) {
+    // Wait for queries to finish
+    if (profileLoading || rolesLoading) return
+
+    if (profile && !isProfileComplete(profile)) {
       router.push('/complete-profile')
       return
     }
 
-    // If user is authenticated but has no roles, redirect to pending approval
-    if (user && roles.length === 0) {
+    if (!roles || roles.length === 0) {
       router.push('/pending-approval')
     }
-  }, [authInitialized, user, profile, roles, router])
+  }, [authInitialized, user, profile, profileLoading, roles, rolesLoading, router])
 
-  // Show loading during initial auth check
-  if (!authInitialized) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    )
-  }
+  const isLoading = !authInitialized || (user && (profileLoading || rolesLoading))
+  const needsRedirect = user && (
+    (profile && !isProfileComplete(profile)) ||
+    (!rolesLoading && (!roles || roles.length === 0))
+  )
 
-  // If user has incomplete profile or no roles, show loading while redirecting
-  if (user && ((profile && !isProfileComplete(profile)) || roles.length === 0)) {
+  if (isLoading || needsRedirect) {
     return (
       <Box
         sx={{
