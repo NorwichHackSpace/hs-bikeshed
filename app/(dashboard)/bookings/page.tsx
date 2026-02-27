@@ -22,7 +22,9 @@ import AddIcon from '@mui/icons-material/Add'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import ListIcon from '@mui/icons-material/List'
 import EventIcon from '@mui/icons-material/Event'
-import { useBookingStore } from '@/stores'
+import { useQueryClient } from '@tanstack/react-query'
+import { useBookingStore, useAuthStore } from '@/stores'
+import { useMyBookings } from '@/lib/queries'
 import { BookingCalendar } from '@/components/features/BookingCalendar'
 import { BookingDialog } from '@/components/features/BookingDialog'
 import type { Booking, Equipment } from '@/types/database'
@@ -32,8 +34,12 @@ interface BookingWithDetails extends Booking {
 }
 
 export default function BookingsPage() {
-  const { bookings, myBookings, loading, initialized, error, fetchBookings, fetchMyBookings } =
-    useBookingStore()
+  const user = useAuthStore((s) => s.user)
+  const queryClient = useQueryClient()
+  const { data: myBookings = [], isLoading: myBookingsLoading, error: myBookingsError } = useMyBookings(user?.id)
+  const { bookings, loading: bookingsLoading, error: bookingsError, fetchBookings } = useBookingStore()
+  const loading = myBookingsLoading || bookingsLoading
+  const error = myBookingsError?.message ?? bookingsError ?? null
 
   const [view, setView] = useState<'calendar' | 'list'>('calendar')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -42,8 +48,7 @@ export default function BookingsPage() {
 
   useEffect(() => {
     fetchBookings()
-    fetchMyBookings()
-  }, [fetchBookings, fetchMyBookings])
+  }, [fetchBookings])
 
   const handleDayClick = useCallback((date: Date) => {
     setSelectedDate(date)
@@ -63,8 +68,8 @@ export default function BookingsPage() {
     setEditingBooking(null)
     // Refresh bookings
     fetchBookings()
-    fetchMyBookings()
-  }, [fetchBookings, fetchMyBookings])
+    queryClient.invalidateQueries({ queryKey: ['myBookings'] })
+  }, [fetchBookings, queryClient])
 
   const handleNewBooking = () => {
     setSelectedDate(new Date())
@@ -101,7 +106,7 @@ export default function BookingsPage() {
     (b) => new Date(b.end_time) > new Date()
   )
 
-  if (!initialized && loading) {
+  if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
         <CircularProgress />

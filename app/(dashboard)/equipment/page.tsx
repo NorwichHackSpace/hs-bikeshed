@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Box,
@@ -25,7 +25,8 @@ import BuildIcon from '@mui/icons-material/Build'
 import ViewListIcon from '@mui/icons-material/ViewList'
 import ViewModuleIcon from '@mui/icons-material/ViewModule'
 import SearchIcon from '@mui/icons-material/Search'
-import { useEquipmentStore, type EquipmentWithMaintainers } from '@/stores'
+import { useEquipmentStore } from '@/stores'
+import { useEquipment, type EquipmentWithMaintainers } from '@/lib/queries'
 import { EquipmentDialog } from '@/components/features/EquipmentDialog'
 import { getCategorySlug } from '@/lib/utils'
 import type { Equipment } from '@/types/database'
@@ -55,15 +56,12 @@ const getImageUrl = (path: string) => {
 
 export default function EquipmentPage() {
   const router = useRouter()
-  const { equipment, loading, initialized, error, fetchEquipment, createEquipment } =
-    useEquipmentStore()
+  const { data: equipment = [], isLoading: loading, error: queryError } = useEquipment()
+  const { createEquipment } = useEquipmentStore()
+  const error = queryError?.message ?? null
   const [dialogOpen, setDialogOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
-
-  useEffect(() => {
-    fetchEquipment()
-  }, [fetchEquipment])
 
   const handleAdd = () => {
     setDialogOpen(true)
@@ -174,7 +172,7 @@ export default function EquipmentPage() {
     },
   ]
 
-  if (!initialized && loading) {
+  if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
         <CircularProgress />

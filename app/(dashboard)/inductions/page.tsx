@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import {
   Box,
   Card,
@@ -18,18 +17,17 @@ import {
 import SchoolIcon from '@mui/icons-material/School'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PendingIcon from '@mui/icons-material/Pending'
-import { useInductionStore } from '@/stores'
+import { useAuthStore } from '@/stores'
+import { useMyInductions, useMyInductionRequests } from '@/lib/queries'
 
 export default function InductionsPage() {
-  const { myInductions, myRequests, loading, initialized, error, fetchMyInductions, fetchMyRequests } =
-    useInductionStore()
+  const user = useAuthStore((s) => s.user)
+  const { data: myInductions = [], isLoading: inductionsLoading, error: inductionsError } = useMyInductions(user?.id)
+  const { data: myRequests = [], isLoading: requestsLoading, error: requestsError } = useMyInductionRequests(user?.id)
+  const loading = inductionsLoading || requestsLoading
+  const error = inductionsError?.message ?? requestsError?.message ?? null
 
-  useEffect(() => {
-    fetchMyInductions()
-    fetchMyRequests()
-  }, [fetchMyInductions, fetchMyRequests])
-
-  if (!initialized && loading) {
+  if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
         <CircularProgress />
