@@ -48,6 +48,35 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Check profile and role completion for authenticated dashboard users
+  if (isDashboardRoute && user) {
+    // Check if user has a profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/complete-profile'
+      return NextResponse.redirect(url)
+    }
+
+    // Check if user has any roles assigned
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('user_id', user.id)
+      .limit(1)
+
+    if (!roles || roles.length === 0) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/pending-approval'
+      return NextResponse.redirect(url)
+    }
+  }
+
   // Redirect logged-in users away from auth pages
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup')
