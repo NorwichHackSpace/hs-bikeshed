@@ -354,6 +354,8 @@ export type Database = {
           updated_at: string | null
           // Payment matching
           payment_reference: string | null
+          // Avatar
+          avatar_url: string | null
         }
         Insert: {
           id: string
@@ -390,6 +392,7 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
           payment_reference?: string | null
+          avatar_url?: string | null
         }
         Update: {
           id?: string
@@ -426,6 +429,7 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
           payment_reference?: string | null
+          avatar_url?: string | null
         }
         Relationships: []
       }

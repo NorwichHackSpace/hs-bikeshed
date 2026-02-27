@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Box,
   Card,
@@ -9,7 +9,6 @@ import {
   TextField,
   Button,
   Alert,
-  Avatar,
   Divider,
   FormControlLabel,
   Checkbox,
@@ -21,6 +20,7 @@ import {
   CircularProgress,
   Paper,
   Grid,
+  IconButton,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import SaveIcon from '@mui/icons-material/Save'
@@ -32,9 +32,12 @@ import ContactEmergencyIcon from '@mui/icons-material/ContactEmergency'
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
+import CameraAltIcon from '@mui/icons-material/CameraAlt'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useAuthStore } from '@/stores'
+import { getClient } from '@/lib/supabase/client'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import type { Profile } from '@/types/database'
 
 const validationSchema = Yup.object({
@@ -145,9 +148,37 @@ const roleColors: Record<string, 'default' | 'primary' | 'secondary' | 'error' |
 }
 
 export default function ProfilePage() {
-  const { profile, roles, loading, error, updateProfile, fetchProfile } = useAuthStore()
+  const { profile, user, roles, loading, error, updateProfile, fetchProfile } = useAuthStore()
   const [isEditing, setIsEditing] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+    const path = `${user.id}/avatar.${ext}`
+
+    setAvatarUploading(true)
+    try {
+      const supabase = getClient()
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true })
+      if (uploadError) throw uploadError
+
+      const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}?t=${Date.now()}`
+      await updateProfile({ avatar_url: publicUrl })
+    } catch (err) {
+      console.error('Avatar upload failed:', err)
+    } finally {
+      setAvatarUploading(false)
+      // Reset file input so re-selecting the same file triggers onChange
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const formik = useFormik<ProfileFormValues>({
     initialValues: mapProfileToFormValues(profile),
@@ -274,17 +305,34 @@ export default function ProfilePage() {
         {/* Profile Header Card */}
         <Card sx={{ mb: 3 }}>
           <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 3, py: 3 }}>
-            <Avatar
-              sx={{
-                width: 100,
-                height: 100,
-                background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)', color: '#000',
-                fontSize: '2.5rem',
-                fontWeight: 600,
-              }}
-            >
-              {profile?.name?.charAt(0).toUpperCase() ?? '?'}
-            </Avatar>
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+              <UserAvatar size={100} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleAvatarUpload}
+              />
+              <IconButton
+                size="small"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={avatarUploading}
+                sx={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  bgcolor: 'background.paper',
+                  border: 1,
+                  borderColor: 'divider',
+                  '&:hover': { bgcolor: 'action.hover' },
+                  width: 32,
+                  height: 32,
+                }}
+              >
+                {avatarUploading ? <CircularProgress size={16} /> : <CameraAltIcon fontSize="small" />}
+              </IconButton>
+            </Box>
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="h4" fontWeight={600}>
                 {profile?.name}
