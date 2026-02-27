@@ -1,5 +1,5 @@
 export { useAuthStore } from './authStore'
-export { useEquipmentStore, type EquipmentWithMaintainers } from './equipmentStore'
+export { useEquipmentStore } from './equipmentStore'
 export { useBookingStore } from './bookingStore'
 export { useInductionStore } from './inductionStore'
 export { useTransactionStore } from './transactionStore'
