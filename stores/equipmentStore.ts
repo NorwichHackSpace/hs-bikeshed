@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { getClient } from '@/lib/supabase/client'
+import { getQueryClient } from '@/lib/queries/queryClient'
 import type { Equipment, Profile } from '@/types/database'
 
 export interface EquipmentWithMaintainers extends Equipment {
@@ -116,7 +117,7 @@ export const useEquipmentStore = create<EquipmentStore>((set, get) => ({
 
       if (error) throw error
 
-      await get().fetchEquipment()
+      getQueryClient().invalidateQueries({ queryKey: ['equipment'] })
     } catch (error) {
       set({ error: (error as Error).message })
       throw error
@@ -137,7 +138,7 @@ export const useEquipmentStore = create<EquipmentStore>((set, get) => ({
 
       if (error) throw error
 
-      await get().fetchEquipment()
+      getQueryClient().invalidateQueries({ queryKey: ['equipment'] })
     } catch (error) {
       set({ error: (error as Error).message })
       throw error
@@ -158,7 +159,7 @@ export const useEquipmentStore = create<EquipmentStore>((set, get) => ({
 
       if (error) throw error
 
-      await get().fetchEquipment()
+      getQueryClient().invalidateQueries({ queryKey: ['equipment'] })
     } catch (error) {
       set({ error: (error as Error).message })
       throw error

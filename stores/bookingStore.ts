@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { getClient } from '@/lib/supabase/client'
+import { getQueryClient } from '@/lib/queries/queryClient'
 import type { Booking, Profile, Equipment } from '@/types/database'
 
 interface BookingWithDetails extends Booking {
@@ -155,7 +156,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       if (error) throw error
 
-      await Promise.all([get().fetchBookings(), get().fetchMyBookings()])
+      await get().fetchBookings()
+      getQueryClient().invalidateQueries({ queryKey: ['myBookings'] })
     } catch (error) {
       set({ error: (error as Error).message })
       throw error
@@ -176,7 +178,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       if (error) throw error
 
-      await Promise.all([get().fetchBookings(), get().fetchMyBookings()])
+      await get().fetchBookings()
+      getQueryClient().invalidateQueries({ queryKey: ['myBookings'] })
     } catch (error) {
       set({ error: (error as Error).message })
       throw error
@@ -197,7 +200,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       if (error) throw error
 
-      await Promise.all([get().fetchBookings(), get().fetchMyBookings()])
+      await get().fetchBookings()
+      getQueryClient().invalidateQueries({ queryKey: ['myBookings'] })
     } catch (error) {
       set({ error: (error as Error).message })
       throw error

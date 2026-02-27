@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { getClient } from '@/lib/supabase/client'
+import { getQueryClient } from '@/lib/queries/queryClient'
 import type { Induction, InductionRequest, Profile, Equipment } from '@/types/database'
 
 interface InductionWithDetails extends Induction {
@@ -215,7 +216,7 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
 
       if (error) throw error
 
-      await get().fetchMyRequests()
+      getQueryClient().invalidateQueries({ queryKey: ['myInductionRequests'] })
     } catch (error) {
       set({ error: (error as Error).message })
       throw error
@@ -263,6 +264,7 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
       if (updateError) throw updateError
 
       await get().fetchRequests()
+      getQueryClient().invalidateQueries({ queryKey: ['myInductions'] })
     } catch (error) {
       set({ error: (error as Error).message })
       throw error
@@ -313,6 +315,7 @@ export const useInductionStore = create<InductionStore>((set, get) => ({
       if (error) throw error
 
       await get().fetchInductions()
+      getQueryClient().invalidateQueries({ queryKey: ['myInductions'] })
     } catch (error) {
       set({ error: (error as Error).message })
       throw error
