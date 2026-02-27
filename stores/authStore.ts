@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import { getClient } from '@/lib/supabase/client'
 import type { Profile, UserRole, UserRoleRecord } from '@/types/database'
 import type { User, Session } from '@supabase/supabase-js'
+import type { ProfileFormValues } from '@/components/auth/MembershipFormSteps'
+
+export type SignupProfileData = ProfileFormValues
 
 interface AuthState {
   user: User | null
@@ -10,35 +13,6 @@ interface AuthState {
   roles: UserRole[]
   loading: boolean
   error: string | null
-}
-
-export interface SignupProfileData {
-  firstName: string
-  lastName: string
-  phone: string
-  addressLine1: string
-  addressLine2?: string
-  city: string
-  county: string
-  postcode: string
-  country: string
-  interestsSkills: string
-  hadTour: boolean
-  hackspaceGoals: string
-  shareDetailsWithMembers: 'yes' | 'no' | 'discuss'
-  acceptedPolicies: boolean
-  acceptedSafetyResponsibility: boolean
-  isOver18: boolean
-  standingOrderConfirmed: boolean
-  hasMedicalConditions: boolean
-  medicalConditionsDetails?: string
-  emergencyContactName: string
-  emergencyContactRelationship: string
-  emergencyContactMobile: string
-  emergencyContactLandline?: string
-  referralSource: string
-  optInCommunications: boolean
-  optInMarketing: boolean
 }
 
 interface AuthActions {
