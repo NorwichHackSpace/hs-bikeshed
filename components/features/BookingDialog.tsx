@@ -16,7 +16,8 @@ import {
 } from '@mui/material'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import { useEquipmentStore, useBookingStore } from '@/stores'
+import { useBookingStore } from '@/stores'
+import { useEquipment } from '@/lib/queries'
 import type { Booking, Equipment } from '@/types/database'
 
 interface BookingDialogProps {
@@ -71,7 +72,7 @@ export function BookingDialog({
   booking,
   preselectedEquipment,
 }: BookingDialogProps) {
-  const { equipment, fetchEquipment } = useEquipmentStore()
+  const { data: equipment = [] } = useEquipment()
   const { createBooking, updateBooking, deleteBooking } = useBookingStore()
 
   const isEdit = Boolean(booking)
@@ -122,12 +123,6 @@ export function BookingDialog({
       }
     },
   })
-
-  useEffect(() => {
-    if (equipment.length === 0) {
-      fetchEquipment()
-    }
-  }, [equipment.length, fetchEquipment])
 
   useEffect(() => {
     if (!open) return

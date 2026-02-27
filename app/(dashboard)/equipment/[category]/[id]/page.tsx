@@ -30,6 +30,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import { useEquipmentStore, useInductionStore, useBookingStore, useAuthStore, useDocumentStore, useUsageLogStore } from '@/stores'
+import { useMyInductions, useMyInductionRequests, useMyBookings } from '@/lib/queries'
+import { useQueryClient } from '@tanstack/react-query'
 import type { EquipmentUsageSummary } from '@/types/database'
 import { EquipmentForm } from '@/components/features/EquipmentForm'
 import { BookingDialog } from '@/components/features/BookingDialog'
@@ -65,15 +67,13 @@ export default function EquipmentDetailPage() {
   const router = useRouter()
   const { selectedEquipment, loading, error, fetchEquipmentById, updateEquipment, clearSelected } =
     useEquipmentStore()
-  const {
-    myInductions,
-    myRequests,
-    fetchMyInductions,
-    fetchMyRequests,
-    createRequest,
-    loading: inductionLoading,
-  } = useInductionStore()
-  const { myBookings, fetchMyBookings, deleteBooking } = useBookingStore()
+  const user = useAuthStore((s) => s.user)
+  const { data: myInductions = [] } = useMyInductions(user?.id)
+  const { data: myRequests = [] } = useMyInductionRequests(user?.id)
+  const { data: myBookings = [] } = useMyBookings(user?.id)
+  const queryClient = useQueryClient()
+  const { createRequest, loading: inductionLoading } = useInductionStore()
+  const { deleteBooking } = useBookingStore()
   const { fetchDocumentsForEquipment, clearLinkedDocuments } = useDocumentStore()
   const { logUsage, fetchEquipmentUsageSummary } = useUsageLogStore()
   const [isEditing, setIsEditing] = useState(false)
@@ -111,9 +111,6 @@ export default function EquipmentDetailPage() {
   useEffect(() => {
     if (equipmentId) {
       fetchEquipmentById(equipmentId)
-      fetchMyInductions()
-      fetchMyRequests()
-      fetchMyBookings()
       fetchDocumentsForEquipment(equipmentId)
       fetchEquipmentUsageSummary(equipmentId).then(setUsageSummary)
     }
@@ -122,12 +119,13 @@ export default function EquipmentDetailPage() {
       clearSelected()
       clearLinkedDocuments()
     }
-  }, [equipmentId, fetchEquipmentById, fetchMyInductions, fetchMyRequests, fetchMyBookings, fetchDocumentsForEquipment, fetchEquipmentUsageSummary, clearSelected, clearLinkedDocuments])
+  }, [equipmentId, fetchEquipmentById, fetchDocumentsForEquipment, fetchEquipmentUsageSummary, clearSelected, clearLinkedDocuments])
 
   const handleRequestInduction = async () => {
     setRequestingInduction(true)
     try {
       await createRequest(equipmentId)
+      queryClient.invalidateQueries({ queryKey: ['myInductionRequests'] })
       setSnackbar({
         open: true,
         message: 'Induction request submitted successfully!',
@@ -604,7 +602,7 @@ export default function EquipmentDetailPage() {
                             onClick={async () => {
                               if (confirm('Cancel this booking?')) {
                                 await deleteBooking(booking.id)
-                                fetchMyBookings()
+                                queryClient.invalidateQueries({ queryKey: ['myBookings'] })
                               }
                             }}
                           >
@@ -688,7 +686,7 @@ export default function EquipmentDetailPage() {
         open={bookingDialogOpen}
         onClose={() => {
           setBookingDialogOpen(false)
-          fetchMyBookings() // Refresh to update "Booked" pill
+          queryClient.invalidateQueries({ queryKey: ['myBookings'] })
         }}
         selectedDate={null}
         preselectedEquipment={item}
