@@ -2,193 +2,241 @@
 
 import { createTheme, alpha } from '@mui/material/styles'
 
-// Norwich Hackspace brand colors
+// ──────────────────────────────────────────────────
+// Quadra 700 — System 7 Platinum theme
+// Chicago for headings, Geneva for body
+// Hard 1px borders, beveled buttons, no radius
+// ──────────────────────────────────────────────────
+
+const chicagoFont = '"ChicagoFLF", "Geneva", "Helvetica Neue", sans-serif'
+const genevaFont = '"Geneva", "Helvetica Neue", "Lucida Grande", sans-serif'
+
+// System 7 palette
+const platinum = {
+  50: '#F5F5F5',
+  100: '#EEEEEE',
+  200: '#DDDDDD',   // Classic platinum desktop
+  300: '#CCCCCC',   // Button face
+  400: '#BBBBBB',
+  500: '#AAAAAA',
+  600: '#888888',
+  700: '#666666',
+  800: '#444444',
+  900: '#222222',
+}
+
 const brandColors = {
   primary: {
-    main: '#F9B233',
+    main: '#000080',       // Classic Mac selection blue
+    light: '#3363AC',
+    dark: '#000060',
+    contrastText: '#FFFFFF',
+  },
+  secondary: {
+    main: '#F9B233',       // Hackspace yellow kept as accent
     light: '#FBCA6A',
     dark: '#D99A1F',
     contrastText: '#000000',
   },
-  secondary: {
-    main: '#6B7280',
-    light: '#9CA3AF',
-    dark: '#4B5563',
-    contrastText: '#ffffff',
-  },
   success: {
-    main: '#22C55E',
-    light: '#4ADE80',
-    dark: '#16A34A',
-    contrastText: '#000000',
+    main: '#008000',
+    light: '#33A033',
+    dark: '#006000',
+    contrastText: '#FFFFFF',
   },
   warning: {
-    main: '#F59E0B',
-    light: '#FBBF24',
-    dark: '#D97706',
+    main: '#CC8800',
+    light: '#DDAA33',
+    dark: '#AA6600',
     contrastText: '#000000',
   },
   error: {
-    main: '#EF4444',
-    light: '#F87171',
-    dark: '#DC2626',
-    contrastText: '#ffffff',
+    main: '#CC0000',
+    light: '#DD3333',
+    dark: '#990000',
+    contrastText: '#FFFFFF',
   },
   info: {
-    main: '#3B82F6',
-    light: '#60A5FA',
-    dark: '#2563EB',
-    contrastText: '#ffffff',
+    main: '#000080',
+    light: '#3363AC',
+    dark: '#000060',
+    contrastText: '#FFFFFF',
   },
 }
 
-const grey = {
-  50: '#f9fafb',
-  100: '#f3f4f6',
-  200: '#e5e7eb',
-  300: '#d1d5db',
-  400: '#9ca3af',
-  500: '#6b7280',
-  600: '#4b5563',
-  700: '#374151',
-  800: '#1f2937',
-  900: '#111827',
-}
-
-// Dark palette
-const darkPalette = {
-  mode: 'dark' as const,
-  ...brandColors,
-  grey,
-  background: {
-    default: '#121218',
-    paper: '#1E1E26',
-  },
-  text: {
-    primary: '#F9FAFB',
-    secondary: '#9CA3AF',
-  },
-  divider: alpha('#ffffff', 0.08),
-}
-
-// Light palette
+// ── Light: Classic Platinum Mac ────────────────
 const lightPalette = {
   mode: 'light' as const,
   ...brandColors,
-  grey,
+  grey: platinum,
   background: {
-    default: '#F5F5F7',
-    paper: '#FFFFFF',
+    default: '#DDDDDD',   // Platinum desktop
+    paper: '#FFFFFF',      // Window content
   },
   text: {
-    primary: '#1F2937',
-    secondary: '#6B7280',
+    primary: '#000000',
+    secondary: '#444444',
   },
-  divider: alpha('#000000', 0.08),
+  divider: '#000000',
 }
 
+// ── Dark: Inverted "After Dark" mode ───────────
+const darkPalette = {
+  mode: 'dark' as const,
+  ...brandColors,
+  primary: {
+    main: '#6699CC',
+    light: '#88BBEE',
+    dark: '#4477AA',
+    contrastText: '#000000',
+  },
+  grey: platinum,
+  background: {
+    default: '#1A1A2E',
+    paper: '#2A2A3E',
+  },
+  text: {
+    primary: '#DDDDDD',
+    secondary: '#AAAAAA',
+  },
+  divider: '#666666',
+}
+
+// ── Beveled border helpers ─────────────────────
+// Classic Mac OS outset: light top/left, dark bottom/right
+const bevelOutset = (light: string, dark: string) =>
+  `inset 1px 1px 0 ${light}, inset -1px -1px 0 ${dark}`
+const bevelInset = (light: string, dark: string) =>
+  `inset 1px 1px 0 ${dark}, inset -1px -1px 0 ${light}`
+
 const getTypography = (textPrimary: string, textSecondary: string) => ({
-  fontFamily: '"Inter", "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  fontFamily: genevaFont,
   h1: {
-    fontWeight: 700,
-    fontSize: '2.25rem',
-    lineHeight: 1.25,
-    letterSpacing: '-0.025em',
+    fontFamily: chicagoFont,
+    fontWeight: 400,
+    fontSize: '1.75rem',
+    lineHeight: 1.3,
+    letterSpacing: 0,
     color: textPrimary,
   },
   h2: {
-    fontWeight: 700,
-    fontSize: '1.875rem',
+    fontFamily: chicagoFont,
+    fontWeight: 400,
+    fontSize: '1.5rem',
     lineHeight: 1.3,
-    letterSpacing: '-0.025em',
+    letterSpacing: 0,
     color: textPrimary,
   },
   h3: {
-    fontWeight: 600,
-    fontSize: '1.5rem',
-    lineHeight: 1.375,
-    color: textPrimary,
-  },
-  h4: {
-    fontWeight: 600,
+    fontFamily: chicagoFont,
+    fontWeight: 400,
     fontSize: '1.25rem',
     lineHeight: 1.375,
     color: textPrimary,
   },
-  h5: {
-    fontWeight: 600,
-    fontSize: '1rem',
+  h4: {
+    fontFamily: chicagoFont,
+    fontWeight: 400,
+    fontSize: '1.125rem',
     lineHeight: 1.375,
     color: textPrimary,
   },
+  h5: {
+    fontFamily: chicagoFont,
+    fontWeight: 400,
+    fontSize: '1rem',
+    lineHeight: 1.4,
+    color: textPrimary,
+  },
   h6: {
-    fontWeight: 600,
+    fontFamily: chicagoFont,
+    fontWeight: 400,
     fontSize: '0.875rem',
     lineHeight: 1.5,
     color: textPrimary,
   },
   subtitle1: {
-    fontSize: '1rem',
+    fontFamily: genevaFont,
+    fontSize: '0.9375rem',
     fontWeight: 400,
-    lineHeight: 1.75,
+    lineHeight: 1.6,
   },
   subtitle2: {
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    lineHeight: 1.57,
-  },
-  body1: {
-    fontSize: '0.875rem',
-    fontWeight: 400,
+    fontFamily: genevaFont,
+    fontSize: '0.8125rem',
+    fontWeight: 700,
     lineHeight: 1.5,
   },
+  body1: {
+    fontFamily: genevaFont,
+    fontSize: '0.875rem',
+    fontWeight: 400,
+    lineHeight: 1.6,
+  },
   body2: {
-    fontSize: '0.75rem',
+    fontFamily: genevaFont,
+    fontSize: '0.8125rem',
     fontWeight: 400,
     lineHeight: 1.5,
   },
   button: {
-    fontWeight: 600,
+    fontFamily: chicagoFont,
+    fontWeight: 400,
+    fontSize: '0.8125rem',
     textTransform: 'none' as const,
+    letterSpacing: 0,
   },
   caption: {
+    fontFamily: genevaFont,
     fontSize: '0.75rem',
     fontWeight: 400,
     lineHeight: 1.5,
     color: textSecondary,
   },
   overline: {
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    letterSpacing: '0.5px',
+    fontFamily: chicagoFont,
+    fontSize: '0.6875rem',
+    fontWeight: 400,
+    letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
   },
 })
 
 const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typeof lightPalette) => {
   const isDark = mode === 'dark'
-  const alphaColor = isDark ? '#ffffff' : '#000000'
-  const scrollbarColor = isDark ? grey[700] : grey[400]
-  const scrollbarHoverColor = isDark ? grey[600] : grey[500]
+  const borderColor = palette.divider
+  const bevelLight = isDark ? '#555555' : '#FFFFFF'
+  const bevelDark = isDark ? '#111111' : '#888888'
+  const buttonFace = isDark ? '#3A3A4E' : '#CCCCCC'
+  const scrollbarColor = isDark ? '#555555' : '#AAAAAA'
+  const inputBg = isDark ? '#1E1E32' : '#FFFFFF'
 
   return {
     MuiCssBaseline: {
       styleOverrides: {
+        '@font-face': {
+          fontFamily: 'ChicagoFLF',
+          fontStyle: 'normal',
+          fontWeight: 400,
+          src: 'url("/fonts/ChicagoFLF.ttf") format("truetype")',
+          fontDisplay: 'swap' as const,
+        },
         body: {
           scrollbarWidth: 'thin' as const,
-          scrollbarColor: `${scrollbarColor} transparent`,
+          scrollbarColor: `${scrollbarColor} ${isDark ? '#2A2A3E' : '#DDDDDD'}`,
           '&::-webkit-scrollbar': {
-            width: '8px',
-            height: '8px',
+            width: '16px',
+            height: '16px',
           },
           '&::-webkit-scrollbar-track': {
-            background: 'transparent',
+            background: isDark ? '#2A2A3E' : '#DDDDDD',
+            border: `1px solid ${borderColor}`,
           },
           '&::-webkit-scrollbar-thumb': {
             backgroundColor: scrollbarColor,
-            borderRadius: '4px',
+            border: `1px solid ${borderColor}`,
             '&:hover': {
-              backgroundColor: scrollbarHoverColor,
+              backgroundColor: isDark ? '#777777' : '#888888',
             },
           },
         },
@@ -197,43 +245,54 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: '10px 24px',
-          fontWeight: 600,
+          borderRadius: 0,
+          padding: '6px 20px',
+          fontFamily: chicagoFont,
+          fontWeight: 400,
+          fontSize: '0.8125rem',
           boxShadow: 'none',
-          transition: 'all 150ms ease-in-out',
+          transition: 'none',
           '&:hover': {
-            transform: 'translateY(-1px)',
+            transform: 'none',
           },
         },
         contained: {
-          boxShadow: 'none',
+          backgroundColor: buttonFace,
+          color: palette.text.primary,
+          border: `2px solid ${borderColor}`,
+          boxShadow: bevelOutset(bevelLight, bevelDark),
           '&:hover': {
-            boxShadow: '0 4px 12px 0 rgba(249, 178, 51, 0.3)',
+            backgroundColor: buttonFace,
+            boxShadow: bevelOutset(bevelLight, bevelDark),
+          },
+          '&:active': {
+            boxShadow: bevelInset(bevelLight, bevelDark),
           },
         },
         containedPrimary: {
-          backgroundColor: palette.primary.main,
-          color: palette.primary.contrastText,
+          backgroundColor: buttonFace,
+          color: palette.text.primary,
+          border: `2px solid ${borderColor}`,
           '&:hover': {
-            backgroundColor: palette.primary.light,
+            backgroundColor: isDark ? '#444458' : '#BBBBBB',
           },
         },
         outlined: {
           borderWidth: '2px',
-          borderColor: alpha(alphaColor, 0.2),
+          borderColor: borderColor,
+          borderRadius: 0,
           color: palette.text.primary,
           '&:hover': {
             borderWidth: '2px',
-            borderColor: palette.primary.main,
-            backgroundColor: alpha(palette.primary.main, 0.1),
+            borderColor: borderColor,
+            backgroundColor: alpha(palette.text.primary, 0.05),
           },
         },
         text: {
-          color: palette.text.secondary,
+          color: palette.text.primary,
+          borderRadius: 0,
           '&:hover': {
-            backgroundColor: alpha(alphaColor, 0.05),
-            color: palette.text.primary,
+            backgroundColor: alpha(palette.text.primary, 0.08),
           },
         },
       },
@@ -241,14 +300,14 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 0,
           backgroundColor: palette.background.paper,
           backgroundImage: 'none',
-          border: `1px solid ${alpha(alphaColor, 0.05)}`,
-          boxShadow: isDark ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.08)',
-          transition: 'border-color 200ms ease-in-out, transform 200ms ease-in-out',
+          border: `1px solid ${borderColor}`,
+          boxShadow: isDark ? 'none' : `2px 2px 0 ${borderColor}`,
+          transition: 'none',
           '&:hover': {
-            borderColor: alpha(alphaColor, 0.1),
+            borderColor: borderColor,
           },
         },
       },
@@ -256,9 +315,9 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiCardContent: {
       styleOverrides: {
         root: {
-          padding: 24,
+          padding: 16,
           '&:last-child': {
-            paddingBottom: 24,
+            paddingBottom: 16,
           },
         },
       },
@@ -267,22 +326,32 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           backgroundImage: 'none',
+          borderRadius: 0,
         },
         outlined: {
-          borderColor: alpha(alphaColor, 0.1),
+          borderColor: borderColor,
+        },
+        elevation1: {
+          boxShadow: isDark ? 'none' : `1px 1px 0 ${borderColor}`,
+        },
+        elevation2: {
+          boxShadow: isDark ? 'none' : `2px 2px 0 ${borderColor}`,
         },
       },
     },
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          fontWeight: 600,
+          borderRadius: 0,
+          fontFamily: genevaFont,
+          fontWeight: 400,
           fontSize: '0.75rem',
+          height: 24,
+          border: `1px solid ${borderColor}`,
         },
         filled: {
           '&.MuiChip-colorDefault': {
-            backgroundColor: alpha(alphaColor, 0.1),
+            backgroundColor: isDark ? '#3A3A4E' : '#DDDDDD',
             color: palette.text.primary,
           },
           '&.MuiChip-colorPrimary': {
@@ -290,32 +359,28 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
             color: palette.primary.contrastText,
           },
           '&.MuiChip-colorSuccess': {
-            backgroundColor: alpha(palette.success.main, 0.15),
-            color: isDark ? palette.success.light : palette.success.dark,
+            backgroundColor: palette.success.main,
+            color: palette.success.contrastText,
           },
           '&.MuiChip-colorWarning': {
-            backgroundColor: alpha(palette.warning.main, 0.15),
-            color: isDark ? palette.warning.light : palette.warning.dark,
+            backgroundColor: palette.warning.main,
+            color: palette.warning.contrastText,
           },
           '&.MuiChip-colorError': {
-            backgroundColor: alpha(palette.error.main, 0.15),
-            color: isDark ? palette.error.light : palette.error.dark,
+            backgroundColor: palette.error.main,
+            color: palette.error.contrastText,
           },
           '&.MuiChip-colorInfo': {
-            backgroundColor: alpha(palette.info.main, 0.15),
-            color: isDark ? palette.info.light : palette.info.dark,
+            backgroundColor: palette.info.main,
+            color: palette.info.contrastText,
           },
           '&.MuiChip-colorSecondary': {
-            backgroundColor: alpha(palette.secondary.main, 0.2),
-            color: palette.text.primary,
+            backgroundColor: palette.secondary.main,
+            color: palette.secondary.contrastText,
           },
         },
         outlined: {
-          borderColor: alpha(alphaColor, 0.2),
-          '&.MuiChip-colorPrimary': {
-            borderColor: palette.primary.main,
-            color: palette.primary.main,
-          },
+          borderColor: borderColor,
         },
       },
     },
@@ -323,9 +388,9 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           boxShadow: 'none',
-          backgroundColor: alpha(palette.background.default, 0.8),
-          backdropFilter: 'blur(20px)',
-          borderBottom: `1px solid ${alpha(alphaColor, 0.05)}`,
+          backgroundColor: isDark ? '#2A2A3E' : '#DDDDDD',
+          backdropFilter: 'none',
+          borderBottom: `1px solid ${borderColor}`,
           color: palette.text.primary,
         },
       },
@@ -333,31 +398,35 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          backgroundColor: isDark ? '#1E1E26' : '#FFFFFF',
+          backgroundColor: isDark ? '#2A2A3E' : '#DDDDDD',
           backgroundImage: 'none',
-          borderRight: `1px solid ${alpha(alphaColor, 0.05)}`,
+          borderRight: `1px solid ${borderColor}`,
+          borderRadius: 0,
         },
       },
     },
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          margin: '4px 12px',
-          padding: '12px 16px',
-          color: palette.text.secondary,
+          borderRadius: 0,
+          margin: '1px 8px',
+          padding: '6px 12px',
+          color: palette.text.primary,
           '&.Mui-selected': {
-            backgroundColor: alpha(alphaColor, 0.08),
-            color: palette.text.primary,
+            backgroundColor: palette.primary.main,
+            color: palette.primary.contrastText,
             '&:hover': {
-              backgroundColor: alpha(alphaColor, 0.12),
+              backgroundColor: palette.primary.main,
             },
             '& .MuiListItemIcon-root': {
-              color: palette.primary.main,
+              color: palette.primary.contrastText,
+            },
+            '& .MuiListItemText-primary': {
+              color: palette.primary.contrastText,
             },
           },
           '&:hover': {
-            backgroundColor: alpha(alphaColor, 0.05),
+            backgroundColor: alpha(palette.text.primary, 0.08),
           },
         },
       },
@@ -366,7 +435,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           color: palette.text.secondary,
-          minWidth: 40,
+          minWidth: 36,
         },
       },
     },
@@ -374,26 +443,31 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-            backgroundColor: alpha(alphaColor, 0.03),
-            transition: 'all 200ms ease-in-out',
+            borderRadius: 0,
+            backgroundColor: inputBg,
+            transition: 'none',
+            boxShadow: bevelInset(bevelLight, bevelDark),
             '& fieldset': {
-              borderColor: alpha(alphaColor, 0.1),
+              borderColor: borderColor,
+              borderWidth: 1,
             },
             '&:hover fieldset': {
-              borderColor: alpha(alphaColor, 0.2),
+              borderColor: borderColor,
             },
             '&.Mui-focused': {
-              backgroundColor: alpha(alphaColor, 0.05),
+              backgroundColor: inputBg,
               '& fieldset': {
-                borderColor: palette.primary.main,
+                borderColor: borderColor,
+                borderWidth: 2,
               },
             },
           },
           '& .MuiInputLabel-root': {
+            fontFamily: genevaFont,
             color: palette.text.secondary,
           },
           '& .MuiOutlinedInput-input': {
+            fontFamily: genevaFont,
             color: palette.text.primary,
           },
         },
@@ -402,7 +476,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiSelect: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 0,
         },
       },
     },
@@ -410,25 +484,29 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         paper: {
           backgroundColor: palette.background.paper,
-          border: `1px solid ${alpha(alphaColor, 0.1)}`,
-          borderRadius: 8,
-          boxShadow: isDark ? '0 20px 40px rgba(0, 0, 0, 0.4)' : '0 10px 40px rgba(0, 0, 0, 0.1)',
+          border: `1px solid ${borderColor}`,
+          borderRadius: 0,
+          boxShadow: isDark ? 'none' : `2px 2px 0 ${borderColor}`,
         },
       },
     },
     MuiMenuItem: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          margin: '4px 8px',
-          padding: '10px 12px',
+          borderRadius: 0,
+          margin: 0,
+          padding: '4px 16px',
+          fontFamily: genevaFont,
+          fontSize: '0.875rem',
           '&:hover': {
-            backgroundColor: alpha(alphaColor, 0.05),
+            backgroundColor: palette.primary.main,
+            color: palette.primary.contrastText,
           },
           '&.Mui-selected': {
-            backgroundColor: alpha(palette.primary.main, 0.15),
+            backgroundColor: palette.primary.main,
+            color: palette.primary.contrastText,
             '&:hover': {
-              backgroundColor: alpha(palette.primary.main, 0.2),
+              backgroundColor: palette.primary.main,
             },
           },
         },
@@ -437,42 +515,56 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiDialog: {
       styleOverrides: {
         paper: {
-          borderRadius: 12,
-          backgroundColor: palette.background.paper,
-          border: `1px solid ${alpha(alphaColor, 0.1)}`,
-          boxShadow: isDark ? '0 24px 48px rgba(0, 0, 0, 0.4)' : '0 24px 48px rgba(0, 0, 0, 0.15)',
+          borderRadius: 0,
+          backgroundColor: isDark ? '#2A2A3E' : '#DDDDDD',
+          border: `2px solid ${borderColor}`,
+          boxShadow: isDark ? 'none' : `3px 3px 0 ${borderColor}`,
         },
       },
     },
     MuiDialogTitle: {
       styleOverrides: {
         root: {
-          fontSize: '1.25rem',
-          fontWeight: 600,
+          fontFamily: chicagoFont,
+          fontSize: '0.875rem',
+          fontWeight: 400,
           color: palette.text.primary,
+          borderBottom: `1px solid ${borderColor}`,
+          padding: '8px 16px',
+          // Pinstripe title bar background
+          backgroundImage: isDark
+            ? `repeating-linear-gradient(0deg, transparent, transparent 1px, ${alpha('#ffffff', 0.03)} 1px, ${alpha('#ffffff', 0.03)} 2px)`
+            : `repeating-linear-gradient(0deg, transparent, transparent 1px, ${alpha('#000000', 0.04)} 1px, ${alpha('#000000', 0.04)} 2px)`,
         },
       },
     },
     MuiDialogContent: {
       styleOverrides: {
         root: {
-          color: palette.text.secondary,
+          color: palette.text.primary,
+          backgroundColor: palette.background.paper,
+          padding: 16,
         },
       },
     },
     MuiFab: {
       styleOverrides: {
         root: {
-          boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.3)',
+          borderRadius: 0,
+          border: `2px solid ${borderColor}`,
+          boxShadow: bevelOutset(bevelLight, bevelDark),
           '&:hover': {
-            boxShadow: '0 8px 24px 0 rgba(249, 178, 51, 0.3)',
+            boxShadow: bevelOutset(bevelLight, bevelDark),
+          },
+          '&:active': {
+            boxShadow: bevelInset(bevelLight, bevelDark),
           },
         },
         primary: {
-          backgroundColor: palette.primary.main,
-          color: palette.primary.contrastText,
+          backgroundColor: buttonFace,
+          color: palette.text.primary,
           '&:hover': {
-            backgroundColor: palette.primary.light,
+            backgroundColor: isDark ? '#444458' : '#BBBBBB',
           },
         },
       },
@@ -480,54 +572,47 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiAvatar: {
       styleOverrides: {
         root: {
-          border: `2px solid ${alpha(alphaColor, 0.1)}`,
+          borderRadius: 0,
+          border: `1px solid ${borderColor}`,
         },
       },
     },
     MuiDivider: {
       styleOverrides: {
         root: {
-          borderColor: alpha(alphaColor, 0.08),
+          borderColor: borderColor,
         },
       },
     },
     MuiAlert: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          border: '1px solid',
+          borderRadius: 0,
+          border: `1px solid ${borderColor}`,
         },
         standardSuccess: {
-          backgroundColor: alpha(palette.success.main, 0.1),
-          borderColor: alpha(palette.success.main, 0.3),
-          color: isDark ? palette.success.light : palette.success.dark,
-          '& .MuiAlert-icon': {
-            color: palette.success.main,
-          },
+          backgroundColor: isDark ? alpha('#008000', 0.15) : '#CCFFCC',
+          borderColor: palette.success.main,
+          color: palette.text.primary,
+          '& .MuiAlert-icon': { color: palette.success.main },
         },
         standardError: {
-          backgroundColor: alpha(palette.error.main, 0.1),
-          borderColor: alpha(palette.error.main, 0.3),
-          color: isDark ? palette.error.light : palette.error.dark,
-          '& .MuiAlert-icon': {
-            color: palette.error.main,
-          },
+          backgroundColor: isDark ? alpha('#CC0000', 0.15) : '#FFCCCC',
+          borderColor: palette.error.main,
+          color: palette.text.primary,
+          '& .MuiAlert-icon': { color: palette.error.main },
         },
         standardWarning: {
-          backgroundColor: alpha(palette.warning.main, 0.1),
-          borderColor: alpha(palette.warning.main, 0.3),
-          color: isDark ? palette.warning.light : palette.warning.dark,
-          '& .MuiAlert-icon': {
-            color: palette.warning.main,
-          },
+          backgroundColor: isDark ? alpha('#CC8800', 0.15) : '#FFEECC',
+          borderColor: palette.warning.main,
+          color: palette.text.primary,
+          '& .MuiAlert-icon': { color: palette.warning.main },
         },
         standardInfo: {
-          backgroundColor: alpha(palette.info.main, 0.1),
-          borderColor: alpha(palette.info.main, 0.3),
-          color: isDark ? palette.info.light : palette.info.dark,
-          '& .MuiAlert-icon': {
-            color: palette.info.main,
-          },
+          backgroundColor: isDark ? alpha('#000080', 0.15) : '#CCCCFF',
+          borderColor: palette.info.main,
+          color: palette.text.primary,
+          '& .MuiAlert-icon': { color: palette.info.main },
         },
       },
     },
@@ -542,10 +627,12 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           '& .MuiTableCell-root': {
-            backgroundColor: alpha(alphaColor, 0.03),
-            color: palette.text.secondary,
-            fontWeight: 600,
-            borderBottom: `1px solid ${alpha(alphaColor, 0.1)}`,
+            backgroundColor: isDark ? '#3A3A4E' : '#DDDDDD',
+            color: palette.text.primary,
+            fontFamily: chicagoFont,
+            fontWeight: 400,
+            fontSize: '0.8125rem',
+            borderBottom: `1px solid ${borderColor}`,
           },
         },
       },
@@ -555,7 +642,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
         root: {
           '& .MuiTableRow-root': {
             '&:hover': {
-              backgroundColor: alpha(alphaColor, 0.03),
+              backgroundColor: alpha(palette.primary.main, 0.08),
             },
           },
         },
@@ -564,8 +651,10 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderBottom: `1px solid ${alpha(alphaColor, 0.05)}`,
+          borderBottom: `1px solid ${borderColor}`,
           color: palette.text.primary,
+          fontFamily: genevaFont,
+          fontSize: '0.8125rem',
         },
       },
     },
@@ -573,7 +662,8 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           '& .MuiTabs-indicator': {
-            backgroundColor: palette.primary.main,
+            backgroundColor: palette.text.primary,
+            height: 2,
           },
         },
       },
@@ -581,10 +671,14 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiTab: {
       styleOverrides: {
         root: {
+          fontFamily: chicagoFont,
+          fontWeight: 400,
+          fontSize: '0.8125rem',
           color: palette.text.secondary,
-          fontWeight: 500,
+          borderRadius: 0,
+          textTransform: 'none' as const,
           '&.Mui-selected': {
-            color: palette.primary.main,
+            color: palette.text.primary,
           },
         },
       },
@@ -592,9 +686,10 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiCheckbox: {
       styleOverrides: {
         root: {
-          color: palette.text.secondary,
+          color: palette.text.primary,
+          borderRadius: 0,
           '&.Mui-checked': {
-            color: palette.primary.main,
+            color: palette.text.primary,
           },
         },
       },
@@ -603,10 +698,16 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           '& .MuiSwitch-switchBase.Mui-checked': {
-            color: palette.primary.main,
+            color: palette.text.primary,
             '& + .MuiSwitch-track': {
-              backgroundColor: palette.primary.main,
+              backgroundColor: palette.text.secondary,
             },
+          },
+          '& .MuiSwitch-track': {
+            borderRadius: 0,
+          },
+          '& .MuiSwitch-thumb': {
+            borderRadius: 0,
           },
         },
       },
@@ -614,22 +715,20 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiBadge: {
       styleOverrides: {
         colorPrimary: {
-          backgroundColor: palette.primary.main,
-          color: palette.primary.contrastText,
-        },
-        colorWarning: {
-          backgroundColor: palette.warning.main,
-          color: palette.warning.contrastText,
+          backgroundColor: palette.text.primary,
+          color: palette.background.paper,
         },
       },
     },
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
-          backgroundColor: isDark ? grey[800] : grey[700],
-          color: '#ffffff',
-          borderRadius: 6,
+          backgroundColor: isDark ? '#444444' : '#000000',
+          color: '#FFFFFF',
+          borderRadius: 0,
+          fontFamily: genevaFont,
           fontSize: '0.75rem',
+          border: `1px solid ${borderColor}`,
         },
       },
     },
@@ -637,17 +736,21 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         paper: {
           backgroundColor: palette.background.paper,
-          border: `1px solid ${alpha(alphaColor, 0.1)}`,
-          borderRadius: 8,
+          border: `1px solid ${borderColor}`,
+          borderRadius: 0,
+          boxShadow: isDark ? 'none' : `2px 2px 0 ${borderColor}`,
         },
         option: {
-          borderRadius: 8,
-          margin: '4px 8px',
+          borderRadius: 0,
+          margin: 0,
+          fontFamily: genevaFont,
           '&[aria-selected="true"]': {
-            backgroundColor: alpha(palette.primary.main, 0.15),
+            backgroundColor: palette.primary.main,
+            color: palette.primary.contrastText,
           },
           '&:hover': {
-            backgroundColor: alpha(alphaColor, 0.05),
+            backgroundColor: palette.primary.main,
+            color: palette.primary.contrastText,
           },
         },
       },
@@ -655,9 +758,10 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiFormLabel: {
       styleOverrides: {
         root: {
+          fontFamily: genevaFont,
           color: palette.text.secondary,
           '&.Mui-focused': {
-            color: palette.primary.main,
+            color: palette.text.primary,
           },
         },
       },
@@ -672,15 +776,16 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiCircularProgress: {
       styleOverrides: {
         colorPrimary: {
-          color: palette.primary.main,
+          color: palette.text.primary,
         },
       },
     },
     MuiLinearProgress: {
       styleOverrides: {
         root: {
-          backgroundColor: alpha(alphaColor, 0.1),
-          borderRadius: 4,
+          backgroundColor: isDark ? '#3A3A4E' : '#DDDDDD',
+          borderRadius: 0,
+          border: `1px solid ${borderColor}`,
         },
         barColorPrimary: {
           backgroundColor: palette.primary.main,
@@ -690,10 +795,10 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiIconButton: {
       styleOverrides: {
         root: {
-          color: palette.text.secondary,
+          borderRadius: 0,
+          color: palette.text.primary,
           '&:hover': {
-            backgroundColor: alpha(alphaColor, 0.05),
-            color: palette.text.primary,
+            backgroundColor: alpha(palette.text.primary, 0.08),
           },
         },
       },
@@ -702,22 +807,15 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           '& .MuiStepLabel-label': {
+            fontFamily: genevaFont,
             color: palette.text.secondary,
-            '&.Mui-active': {
-              color: palette.text.primary,
-            },
-            '&.Mui-completed': {
-              color: palette.text.primary,
-            },
+            '&.Mui-active': { color: palette.text.primary },
+            '&.Mui-completed': { color: palette.text.primary },
           },
           '& .MuiStepIcon-root': {
-            color: alpha(alphaColor, 0.2),
-            '&.Mui-active': {
-              color: palette.primary.main,
-            },
-            '&.Mui-completed': {
-              color: palette.primary.main,
-            },
+            color: palette.grey[400],
+            '&.Mui-active': { color: palette.text.primary },
+            '&.Mui-completed': { color: palette.text.primary },
           },
         },
       },
@@ -725,6 +823,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
   }
 }
 
+// No soft shadows — hard pixel drops only
 const getShadows = (isDark: boolean): [
   'none',
   string, string, string, string, string,
@@ -733,33 +832,33 @@ const getShadows = (isDark: boolean): [
   string, string, string, string, string,
   string, string, string, string
 ] => {
-  const shadowOpacity = isDark ? 0.3 : 0.1
+  const c = isDark ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,1)'
   return [
     'none',
-    `0 1px 2px 0 rgba(0, 0, 0, ${shadowOpacity})`,
-    `0 1px 3px 0 rgba(0, 0, 0, ${shadowOpacity + 0.1}), 0 1px 2px 0 rgba(0, 0, 0, ${shadowOpacity})`,
-    `0 4px 6px -1px rgba(0, 0, 0, ${shadowOpacity + 0.1}), 0 2px 4px -1px rgba(0, 0, 0, ${shadowOpacity})`,
-    `0 10px 15px -3px rgba(0, 0, 0, ${shadowOpacity + 0.1}), 0 4px 6px -2px rgba(0, 0, 0, ${shadowOpacity})`,
-    `0 20px 25px -5px rgba(0, 0, 0, ${shadowOpacity + 0.1}), 0 10px 10px -5px rgba(0, 0, 0, ${shadowOpacity - 0.1})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
-    `0 25px 50px -12px rgba(0, 0, 0, ${shadowOpacity + 0.2})`,
+    `1px 1px 0 ${c}`,
+    `2px 2px 0 ${c}`,
+    `2px 2px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
+    `3px 3px 0 ${c}`,
   ]
 }
 
@@ -770,7 +869,7 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
     palette,
     typography: getTypography(palette.text.primary, palette.text.secondary),
     shape: {
-      borderRadius: 8,
+      borderRadius: 0,
     },
     shadows: getShadows(mode === 'dark'),
     components: getComponents(mode, palette),
