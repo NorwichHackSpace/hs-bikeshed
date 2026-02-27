@@ -11,10 +11,10 @@ Technical guidelines for AI assistants and developers working on this project.
 | Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
 | UI Components | Material UI (MUI) |
-| State Management | Zustand (shared/application state) |
+| State Management | Zustand (auth, mutations) + TanStack Query (server data) |
 | Form State | Formik + Yup (form state and validation) |
 | Backend | Supabase (Postgres, Auth, RLS) |
-| Data Fetching | Supabase JS SDK (via Zustand stores) |
+| Data Fetching | TanStack Query (`lib/queries/`) for reads; Zustand stores for mutations |
 
 ---
 
@@ -31,9 +31,10 @@ nhs-bikeshed/
 ├── components/            # React components
 │   ├── ui/               # Generic UI components
 │   └── features/         # Feature-specific components
-├── stores/               # Zustand stores
+├── stores/               # Zustand stores (auth state, mutations)
 ├── lib/                  # Utilities and configurations
-│   └── supabase/        # Supabase client setup
+│   ├── supabase/        # Supabase client setup
+│   └── queries/         # TanStack Query hooks for data fetching
 ├── types/               # TypeScript type definitions
 ├── theme/               # MUI theme configuration
 ├── documentation/       # Project documentation
@@ -68,44 +69,71 @@ nhs-bikeshed/
 - Use `styled()` or theme overrides for reusable styled components
 - Prefer MUI's built-in icons (`@mui/icons-material`)
 
-### Zustand
+### Data Fetching — TanStack Query
 
-- One store per domain: `useAuthStore`, `useEquipmentStore`, `useBookingStore`, etc.
-- Stores handle all Supabase data fetching and mutations
+Read-only data fetching uses TanStack Query hooks in `lib/queries/`. This gives automatic caching, background refetching, and deduplication.
+
+**Existing query hooks:**
+
+| Hook | Key | Source |
+|------|-----|--------|
+| `useProfile(userId)` | `['profile', userId]` | `lib/queries/useProfile.ts` |
+| `useUserRoles(userId)` | `['userRoles', userId]` | `lib/queries/useUserRoles.ts` |
+| `useEquipment()` | `['equipment']` | `lib/queries/useEquipment.ts` |
+| `useMyBookings(userId)` | `['myBookings', userId]` | `lib/queries/useMyBookings.ts` |
+| `useMyInductions(userId)` | `['myInductions', userId]` | `lib/queries/useMyInductions.ts` |
+| `useMyInductionRequests(userId)` | `['myInductionRequests', userId]` | `lib/queries/useMyInductions.ts` |
+
+**Query client** is configured in `lib/queries/queryClient.ts` with 5-minute stale time, 3 retries, and refetch on window focus.
+
+**Query hook pattern:**
+
+```typescript
+import { useQuery } from '@tanstack/react-query'
+import { getClient } from '@/lib/supabase/client'
+
+async function fetchEquipment(): Promise<EquipmentWithMaintainers[]> {
+  const supabase = getClient()
+  const { data, error } = await supabase.from('equipment').select('*').order('name')
+  if (error) throw error
+  return data ?? []
+}
+
+export function useEquipment(enabled = true) {
+  return useQuery({
+    queryKey: ['equipment'],
+    queryFn: fetchEquipment,
+    enabled,
+  })
+}
+```
+
+**Invalidation after mutations:** Zustand store mutations call `getQueryClient().invalidateQueries()` to refresh relevant queries after creates/updates/deletes.
+
+### Zustand — Auth & Mutations
+
+Zustand stores remain for auth state (`useAuthStore`) and domain-specific mutations (create, update, delete operations). Stores that still exist: `authStore`, `equipmentStore`, `bookingStore`, `inductionStore`, `transactionStore`, `maintainerStore`, `documentStore`, `usageLogStore`, `themeStore`.
+
 - Keep stores flat; avoid deeply nested state
-- Use `immer` middleware if mutations become complex
-- Stores should expose:
-  - State (data, loading, error)
-  - Actions (fetch, create, update, delete)
+- Mutation stores should invalidate relevant TanStack Query keys after successful writes
+- `useAuthStore` holds `user`, `profile`, `roles`, and auth methods (sign in, sign out, etc.)
 
-**Store pattern:**
+**Store pattern (mutations):**
 
 ```typescript
 import { create } from 'zustand'
 import { getClient } from '@/lib/supabase/client'
-
-interface EquipmentStore {
-  equipment: Equipment[]
-  loading: boolean
-  error: string | null
-  fetchEquipment: () => Promise<void>
-}
+import { getQueryClient } from '@/lib/queries/queryClient'
 
 export const useEquipmentStore = create<EquipmentStore>((set) => ({
-  equipment: [],
   loading: false,
   error: null,
-  fetchEquipment: async () => {
+  createEquipment: async (data) => {
     const supabase = getClient()
     set({ loading: true, error: null })
-    const { data, error } = await supabase
-      .from('equipment')
-      .select('*')
-    set({
-      equipment: data ?? [],
-      loading: false,
-      error: error?.message ?? null
-    })
+    const { error } = await supabase.from('equipment').insert(data)
+    set({ loading: false, error: error?.message ?? null })
+    if (!error) getQueryClient().invalidateQueries({ queryKey: ['equipment'] })
   },
 }))
 ```
@@ -176,7 +204,7 @@ const formik = useFormik({
 ## Do Not
 
 - Do not use Pages Router (`pages/` directory)
-- Do not use Redux, React Query, or SWR (use Zustand + direct Supabase calls)
+- Do not use Redux or SWR (use TanStack Query for reads + Zustand for mutations)
 - Do not bypass RLS with service role key in frontend
 - Do not store sensitive data in client-side state
 - Do not use CSS modules or Tailwind (use MUI's styling system)

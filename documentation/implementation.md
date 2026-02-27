@@ -22,7 +22,8 @@ This document details the full implementation of each feature in the BikeShed ap
 | Frontend Framework | Next.js 15 (App Router) |
 | Language | TypeScript |
 | UI Library | Material UI (MUI) v6 |
-| Application State | Zustand |
+| Server Data | TanStack Query v5 (`lib/queries/`) |
+| Client State | Zustand (auth, mutations) |
 | Form State | Formik + Yup |
 | Backend | Supabase (PostgreSQL + Auth + Storage) |
 | Package Manager | pnpm |
@@ -38,8 +39,9 @@ nhs-bikeshed/
 │   ├── features/          # Feature-specific components
 │   └── ui/                # Reusable UI components
 ├── lib/
-│   └── supabase/          # Supabase client configuration
-├── stores/                # Zustand state stores
+│   ├── supabase/          # Supabase client configuration
+│   └── queries/           # TanStack Query hooks for data fetching
+├── stores/                # Zustand stores (auth state, mutations)
 ├── theme/                 # MUI theme configuration
 ├── types/                 # TypeScript type definitions
 └── documentation/         # Project documentation
@@ -225,7 +227,7 @@ interface AuthState {
 
 1. `AuthProvider` component wraps dashboard routes
 2. On mount, calls `initialize()` to check existing session
-3. If session exists, fetches user profile from `profiles` table
+3. If session exists, profile and roles are fetched via TanStack Query hooks (`useProfile`, `useUserRoles`) and synced to the Zustand auth store
 4. Subscribes to auth state changes for real-time updates
 
 ### Profile Creation
@@ -268,19 +270,9 @@ The `metadata` JSONB field stores flexible specifications:
 }
 ```
 
-### Equipment Store (`stores/equipmentStore.ts`)
+### Equipment Data
 
-```typescript
-interface EquipmentState {
-  equipment: EquipmentWithMaintainers[]
-  loading: boolean
-  error: string | null
-
-  fetchEquipment: () => Promise<void>
-  createEquipment: (data: EquipmentInsert) => Promise<void>
-  updateEquipment: (id: string, data: EquipmentUpdate) => Promise<void>
-}
-```
+Equipment data is fetched via the `useEquipment()` TanStack Query hook (`lib/queries/useEquipment.ts`), which returns `EquipmentWithMaintainers[]` with automatic caching. Mutations (create, update) remain in the Zustand `equipmentStore` and invalidate the `['equipment']` query key on success.
 
 ### Components
 
@@ -395,22 +387,9 @@ interface Booking {
 }
 ```
 
-### Booking Store (`stores/bookingStore.ts`)
+### Booking Data
 
-```typescript
-interface BookingState {
-  bookings: BookingWithDetails[]      // All bookings (for calendar)
-  myBookings: BookingWithDetails[]    // Current user's bookings
-  loading: boolean
-  error: string | null
-
-  fetchBookings: (equipmentId?: string) => Promise<void>
-  fetchMyBookings: () => Promise<void>
-  createBooking: (booking: BookingInput) => Promise<void>
-  updateBooking: (id: string, updates: Partial<Booking>) => Promise<void>
-  deleteBooking: (id: string) => Promise<void>
-}
-```
+User bookings are fetched via `useMyBookings(userId)` TanStack Query hook (`lib/queries/useMyBookings.ts`). Calendar bookings and mutations (create, update, delete) remain in the Zustand `bookingStore` and invalidate `['myBookings']` on success.
 
 ### Components
 
@@ -460,16 +439,18 @@ const TIME_SLOTS = ['00:00', '00:15', '00:30', '00:45', '01:00', ...]
 
 ### Architecture
 
-The application uses a two-tier state management approach:
+The application uses a three-tier state management approach:
 
 | State Type | Technology | Purpose |
 |------------|------------|---------|
-| Application State | Zustand | Shared data (equipment list, bookings, auth) |
+| Server Data | TanStack Query | Cached reads (equipment, bookings, profile, inductions) |
+| Client State | Zustand | Auth state, mutations with query invalidation |
 | Form State | Formik + Yup | Form inputs, validation, submission |
 
 ### Why This Pattern?
 
-- **Zustand** handles data that needs to be shared across components and persisted
+- **TanStack Query** handles server data with automatic caching, background refetching, deduplication, and loading/error states. Query hooks live in `lib/queries/`.
+- **Zustand** handles auth state (`useAuthStore`) and mutation actions (create/update/delete) that invalidate relevant TanStack Query keys after success.
 - **Formik** handles transient form state that's local to a single component
 - **Yup** provides declarative validation schemas
 
@@ -499,7 +480,7 @@ const formik = useFormik<FormValues>({
   validationSchema,
   onSubmit: async (values, { setSubmitting, setStatus }) => {
     try {
-      await saveToZustandStore(values)
+      await saveData(values)
       onClose()
     } catch (err) {
       setStatus({ error: err.message })
@@ -721,10 +702,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 ## Future Features
 
 Planned features not yet implemented:
-- Bookings management
-- Inductions tracking and requests
-- Projects showcase
-- Admin dashboard
 - Member directory
 - Equipment maintenance logs
 - Notification system
