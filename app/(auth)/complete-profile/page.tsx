@@ -20,6 +20,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { useFormik } from 'formik'
 import { getClient } from '@/lib/supabase/client'
+import { isProfileComplete } from '@/lib/profileValidation'
 import type { User } from '@supabase/supabase-js'
 import {
   type ProfileFormValues,
@@ -51,14 +52,55 @@ export default function CompleteProfilePage() {
       // Check if profile already exists
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('*')
         .eq('id', user.id)
         .single()
 
-      if (profile) {
-        // Profile exists, redirect to equipment
-        router.push('/equipment')
+      if (profile && isProfileComplete(profile)) {
+        // Profile exists and is complete - check roles
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+
+        if (roles && roles.length > 0) {
+          router.push('/equipment')
+        } else {
+          router.push('/pending-approval')
+        }
         return
+      }
+
+      // Pre-populate form with existing profile data if available
+      if (profile) {
+        formik.setValues({
+          firstName: profile.first_name || '',
+          lastName: profile.last_name || '',
+          phone: profile.phone || '',
+          addressLine1: profile.address_line1 || '',
+          addressLine2: profile.address_line2 || '',
+          city: profile.city || '',
+          county: profile.county || '',
+          postcode: profile.postcode || '',
+          country: profile.country || 'United Kingdom',
+          interestsSkills: profile.interests_skills || '',
+          hadTour: profile.had_tour || false,
+          hackspaceGoals: profile.hackspace_goals || '',
+          shareDetailsWithMembers: (profile.share_details_with_members as 'yes' | 'no' | 'discuss') || 'no',
+          referralSource: profile.referral_source || '',
+          emergencyContactName: profile.emergency_contact_name || '',
+          emergencyContactRelationship: profile.emergency_contact_relationship || '',
+          emergencyContactMobile: profile.emergency_contact_mobile || '',
+          emergencyContactLandline: profile.emergency_contact_landline || '',
+          hasMedicalConditions: profile.has_medical_conditions || false,
+          medicalConditionsDetails: profile.medical_conditions_details || '',
+          acceptedPolicies: profile.accepted_policies || false,
+          acceptedSafetyResponsibility: profile.accepted_safety_responsibility || false,
+          isOver18: profile.is_over_18 || false,
+          standingOrderConfirmed: profile.standing_order_confirmed || false,
+          optInCommunications: profile.opt_in_communications || false,
+          optInMarketing: profile.opt_in_marketing || false,
+        })
       }
 
       setUser(user)
@@ -66,6 +108,7 @@ export default function CompleteProfilePage() {
     }
 
     checkUser()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
   const formik = useFormik<ProfileFormValues>({
@@ -78,7 +121,7 @@ export default function CompleteProfilePage() {
       const supabase = getClient()
 
       try {
-        const { error: insertError } = await supabase.from('profiles').insert({
+        const { error: insertError } = await supabase.from('profiles').upsert({
           id: user.id,
           name: `${values.firstName} ${values.lastName}`.trim(),
           first_name: values.firstName,
@@ -117,7 +160,7 @@ export default function CompleteProfilePage() {
         setSuccess(true)
         // Redirect after a short delay
         setTimeout(() => {
-          router.push('/equipment')
+          router.push('/pending-approval')
         }, 2000)
       } catch (err) {
         setError((err as Error).message)
@@ -206,7 +249,7 @@ export default function CompleteProfilePage() {
                 Profile Complete!
               </Typography>
               <Typography color="text.secondary" sx={{ mb: 3 }}>
-                Welcome to Norwich Hackspace! Redirecting you to the equipment page...
+                Welcome to Norwich Hackspace! Your profile is being reviewed. Redirecting...
               </Typography>
               <CircularProgress size={24} sx={{ color: '#F9B233' }} />
             </CardContent>

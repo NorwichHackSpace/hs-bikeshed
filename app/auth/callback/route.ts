@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { isProfileComplete } from '@/lib/profileValidation'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -11,18 +12,17 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Check if user has a profile
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id')
+          .select('id, first_name, emergency_contact_name, accepted_policies')
           .eq('id', user.id)
           .single()
 
-        // If no profile exists, redirect to complete profile
-        if (!profile) {
+        // If no profile or profile is incomplete, redirect to complete profile
+        if (!profile || !isProfileComplete(profile)) {
           return NextResponse.redirect(`${origin}/complete-profile`)
         }
 

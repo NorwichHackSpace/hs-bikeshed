@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Box, CircularProgress } from '@mui/material'
 import { useAuthStore, useAppStore } from '@/stores'
+import { isProfileComplete } from '@/lib/profileValidation'
 
 interface AuthProviderProps {
   children: React.ReactNode
@@ -13,6 +14,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter()
   const initialize = useAuthStore((state) => state.initialize)
   const user = useAuthStore((state) => state.user)
+  const profile = useAuthStore((state) => state.profile)
   const roles = useAuthStore((state) => state.roles)
   const initializeApp = useAppStore((state) => state.initializeApp)
   const appInitialized = useAppStore((state) => state.initialized)
@@ -37,11 +39,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (!authInitialized) return
 
+    // If user is authenticated but profile is incomplete, redirect to complete profile
+    if (user && profile && !isProfileComplete(profile)) {
+      router.push('/complete-profile')
+      return
+    }
+
     // If user is authenticated but has no roles, redirect to pending approval
     if (user && roles.length === 0) {
       router.push('/pending-approval')
     }
-  }, [authInitialized, user, roles, router])
+  }, [authInitialized, user, profile, roles, router])
 
   // Show loading during initial auth check
   if (!authInitialized) {
@@ -59,8 +67,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     )
   }
 
-  // If user has no roles, show loading while redirecting
-  if (user && roles.length === 0) {
+  // If user has incomplete profile or no roles, show loading while redirecting
+  if (user && ((profile && !isProfileComplete(profile)) || roles.length === 0)) {
     return (
       <Box
         sx={{
