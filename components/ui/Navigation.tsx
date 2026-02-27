@@ -103,7 +103,7 @@ export function Navigation() {
   ]
 
   const isDark = theme.palette.mode === 'dark'
-  const drawerBg = isDark ? '#2A2A3E' : '#DDDDDD'
+  const drawerBg = isDark ? '#4A4A4A' : '#DDDDDD'
   const primaryColor = theme.palette.primary.main
 
   const drawer = (

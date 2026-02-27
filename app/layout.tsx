@@ -2,10 +2,8 @@ import type { Metadata } from 'next'
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter'
 import { ThemeProvider } from '@/theme'
 import { QueryProvider } from '@/components/ui/QueryProvider'
-import '@fontsource/ibm-plex-sans/400.css'
-import '@fontsource/ibm-plex-sans/500.css'
-import '@fontsource/ibm-plex-sans/600.css'
-import '@fontsource/ibm-plex-sans/700.css'
+import '@fontsource-variable/jetbrains-mono'
+import '@fontsource-variable/dm-sans'
 
 export const metadata: Metadata = {
   title: 'BikeShed - Norwich Hackspace',
@@ -19,6 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="stylesheet" href="/fonts/chicago.css" />
+      </head>
       <body>
         <AppRouterCacheProvider>
           <ThemeProvider>

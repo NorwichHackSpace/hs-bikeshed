@@ -80,26 +80,29 @@ const lightPalette = {
   divider: '#000000',
 }
 
-// ── Dark: Inverted "After Dark" mode ───────────
+// ── Dark: System 7 on a dark CRT ───────────────
+// Keep the same platinum UI feel but inverted —
+// grey chrome on dark background, like running a
+// classic Mac with the contrast turned down
 const darkPalette = {
   mode: 'dark' as const,
   ...brandColors,
   primary: {
-    main: '#6699CC',
-    light: '#88BBEE',
-    dark: '#4477AA',
-    contrastText: '#000000',
+    main: '#4466AA',
+    light: '#6688CC',
+    dark: '#223388',
+    contrastText: '#FFFFFF',
   },
   grey: platinum,
   background: {
-    default: '#1A1A2E',
-    paper: '#2A2A3E',
+    default: '#3A3A3A',    // Dark grey desktop (not blue-tinted)
+    paper: '#4A4A4A',      // Window body — lighter grey
   },
   text: {
-    primary: '#DDDDDD',
-    secondary: '#AAAAAA',
+    primary: '#EEEEEE',
+    secondary: '#BBBBBB',
   },
-  divider: '#666666',
+  divider: '#888888',
 }
 
 // ── Beveled border helpers ─────────────────────
@@ -205,31 +208,24 @@ const getTypography = (textPrimary: string, textSecondary: string) => ({
 const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typeof lightPalette) => {
   const isDark = mode === 'dark'
   const borderColor = palette.divider
-  const bevelLight = isDark ? '#555555' : '#FFFFFF'
-  const bevelDark = isDark ? '#111111' : '#888888'
-  const buttonFace = isDark ? '#3A3A4E' : '#CCCCCC'
-  const scrollbarColor = isDark ? '#555555' : '#AAAAAA'
-  const inputBg = isDark ? '#1E1E32' : '#FFFFFF'
+  const bevelLight = isDark ? '#777777' : '#FFFFFF'
+  const bevelDark = isDark ? '#222222' : '#888888'
+  const buttonFace = isDark ? '#5A5A5A' : '#CCCCCC'
+  const scrollbarColor = isDark ? '#666666' : '#AAAAAA'
+  const inputBg = isDark ? '#3A3A3A' : '#FFFFFF'
 
   return {
     MuiCssBaseline: {
       styleOverrides: {
-        '@font-face': {
-          fontFamily: 'ChicagoFLF',
-          fontStyle: 'normal',
-          fontWeight: 400,
-          src: 'url("/fonts/ChicagoFLF.ttf") format("truetype")',
-          fontDisplay: 'swap' as const,
-        },
         body: {
           scrollbarWidth: 'thin' as const,
-          scrollbarColor: `${scrollbarColor} ${isDark ? '#2A2A3E' : '#DDDDDD'}`,
+          scrollbarColor: `${scrollbarColor} ${isDark ? '#4A4A4A' : '#DDDDDD'}`,
           '&::-webkit-scrollbar': {
             width: '16px',
             height: '16px',
           },
           '&::-webkit-scrollbar-track': {
-            background: isDark ? '#2A2A3E' : '#DDDDDD',
+            background: isDark ? '#4A4A4A' : '#DDDDDD',
             border: `1px solid ${borderColor}`,
           },
           '&::-webkit-scrollbar-thumb': {
@@ -274,7 +270,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
           color: palette.text.primary,
           border: `2px solid ${borderColor}`,
           '&:hover': {
-            backgroundColor: isDark ? '#444458' : '#BBBBBB',
+            backgroundColor: isDark ? '#6A6A6A' : '#BBBBBB',
           },
         },
         outlined: {
@@ -351,7 +347,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
         },
         filled: {
           '&.MuiChip-colorDefault': {
-            backgroundColor: isDark ? '#3A3A4E' : '#DDDDDD',
+            backgroundColor: isDark ? '#5A5A5A' : '#DDDDDD',
             color: palette.text.primary,
           },
           '&.MuiChip-colorPrimary': {
@@ -388,7 +384,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           boxShadow: 'none',
-          backgroundColor: isDark ? '#2A2A3E' : '#DDDDDD',
+          backgroundColor: isDark ? '#4A4A4A' : '#DDDDDD',
           backdropFilter: 'none',
           borderBottom: `1px solid ${borderColor}`,
           color: palette.text.primary,
@@ -398,7 +394,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          backgroundColor: isDark ? '#2A2A3E' : '#DDDDDD',
+          backgroundColor: isDark ? '#4A4A4A' : '#DDDDDD',
           backgroundImage: 'none',
           borderRight: `1px solid ${borderColor}`,
           borderRadius: 0,
@@ -516,7 +512,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         paper: {
           borderRadius: 0,
-          backgroundColor: isDark ? '#2A2A3E' : '#DDDDDD',
+          backgroundColor: isDark ? '#4A4A4A' : '#DDDDDD',
           border: `2px solid ${borderColor}`,
           boxShadow: isDark ? 'none' : `3px 3px 0 ${borderColor}`,
         },
@@ -564,7 +560,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
           backgroundColor: buttonFace,
           color: palette.text.primary,
           '&:hover': {
-            backgroundColor: isDark ? '#444458' : '#BBBBBB',
+            backgroundColor: isDark ? '#6A6A6A' : '#BBBBBB',
           },
         },
       },
@@ -627,7 +623,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
       styleOverrides: {
         root: {
           '& .MuiTableCell-root': {
-            backgroundColor: isDark ? '#3A3A4E' : '#DDDDDD',
+            backgroundColor: isDark ? '#5A5A5A' : '#DDDDDD',
             color: palette.text.primary,
             fontFamily: chicagoFont,
             fontWeight: 400,
@@ -783,7 +779,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiLinearProgress: {
       styleOverrides: {
         root: {
-          backgroundColor: isDark ? '#3A3A4E' : '#DDDDDD',
+          backgroundColor: isDark ? '#5A5A5A' : '#DDDDDD',
           borderRadius: 0,
           border: `1px solid ${borderColor}`,
         },
