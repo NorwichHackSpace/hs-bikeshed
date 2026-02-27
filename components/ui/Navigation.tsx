@@ -14,7 +14,6 @@ import {
   ListItemText,
   Toolbar,
   Typography,
-  Avatar,
   Menu,
   MenuItem,
   Divider,
@@ -37,8 +36,9 @@ import BarChartIcon from '@mui/icons-material/BarChart'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
 import LightModeIcon from '@mui/icons-material/LightMode'
 import { useAuthStore, useThemeStore } from '@/stores'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
-const DRAWER_WIDTH = 280
+const DRAWER_WIDTH = 260
 
 const navItems = [
   { label: 'My Profile', href: '/profile', icon: <PersonIcon /> },
@@ -85,7 +85,6 @@ export function Navigation() {
   const handleSignOut = async () => {
     handleMenuClose()
     await signOut()
-    // Use hard redirect to ensure clean state
     window.location.href = '/login'
   }
 
@@ -103,6 +102,11 @@ export function Navigation() {
     ...(isAdmin() ? adminItems : []),
   ]
 
+  const isDark = theme.palette.mode === 'dark'
+  const drawerBg = isDark ? '#0D1117' : '#FFFFFF'
+  const primaryColor = theme.palette.primary.main
+  const accentColor = theme.palette.secondary.main
+
   const drawer = (
     <Box
       sx={{
@@ -111,78 +115,87 @@ export function Navigation() {
         flexDirection: 'column',
       }}
     >
-      {/* Logo Area */}
-      <Box
+      {/* Logo — fixed 64px to match AppBar Toolbar height */}
+      <Toolbar
         sx={{
-          p: 3,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
+          px: 2.5,
+          gap: 1.5,
+          minHeight: { xs: 64, sm: 64 },
         }}
       >
         <Image
           src="/Norwich_hackspace_roundel-135x135.png"
           alt="Norwich Hackspace"
-          width={40}
-          height={40}
-          style={{ borderRadius: 8 }}
+          width={32}
+          height={32}
+          style={{ borderRadius: 6 }}
         />
-        <Box>
+        <Box sx={{ minWidth: 0 }}>
           <Typography
             variant="h6"
+            noWrap
             sx={{
               fontWeight: 700,
-              color: 'white',
-              letterSpacing: '-0.025em',
+              fontSize: '0.95rem',
+              color: 'text.primary',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.2,
             }}
           >
             BikeShed
           </Typography>
           <Typography
             variant="caption"
+            noWrap
             sx={{
-              color: alpha('#ffffff', 0.6),
-              fontSize: '0.7rem',
+              color: 'text.secondary',
+              fontSize: '0.65rem',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
             }}
           >
             Norwich Hackspace
           </Typography>
         </Box>
-      </Box>
+      </Toolbar>
 
-      <Divider sx={{ borderColor: alpha('#ffffff', 0.1), mx: 2 }} />
+      <Divider sx={{ borderColor: alpha(primaryColor, 0.08) }} />
 
       {/* Navigation Items */}
-      <List sx={{ px: 1, py: 2, flexGrow: 1 }}>
+      <List sx={{ px: 1.5, pt: 1.5, pb: 1, flexGrow: 1 }}>
         {allNavItems.map((item) => {
           const isSelected = pathname.startsWith(item.href)
           return (
-            <ListItem key={item.href} disablePadding sx={{ mb: 0.5 }}>
+            <ListItem key={item.href} disablePadding sx={{ mb: 0.25 }}>
               <ListItemButton
                 selected={isSelected}
                 onClick={() => handleNavClick(item.href)}
                 sx={{
-                  borderRadius: 2,
-                  mx: 1,
-                  py: 1.5,
+                  borderRadius: 1.5,
+                  mx: 0,
+                  py: 0.875,
+                  px: 1.5,
                   backgroundColor: isSelected
-                    ? alpha('#ffffff', 0.1)
+                    ? alpha(accentColor, 0.1)
                     : 'transparent',
                   '&:hover': {
-                    backgroundColor: alpha('#ffffff', 0.08),
+                    backgroundColor: isSelected
+                      ? alpha(accentColor, 0.14)
+                      : alpha(primaryColor, 0.06),
                   },
                   '&.Mui-selected': {
-                    backgroundColor: alpha('#ffffff', 0.1),
+                    backgroundColor: alpha(accentColor, 0.1),
                     '&:hover': {
-                      backgroundColor: alpha('#ffffff', 0.15),
+                      backgroundColor: alpha(accentColor, 0.14),
                     },
                   },
                 }}
               >
                 <ListItemIcon
                   sx={{
-                    color: isSelected ? '#F9B233' : alpha('#ffffff', 0.7),
-                    minWidth: 44,
+                    color: isSelected ? accentColor : 'text.secondary',
+                    minWidth: 36,
+                    '& .MuiSvgIcon-root': { fontSize: '1.2rem' },
                   }}
                 >
                   {item.icon}
@@ -192,8 +205,8 @@ export function Navigation() {
                   slotProps={{
                     primary: {
                       fontWeight: isSelected ? 600 : 400,
-                      fontSize: '0.875rem',
-                      color: isSelected ? '#ffffff' : alpha('#ffffff', 0.8),
+                      fontSize: '0.8125rem',
+                      color: isSelected ? 'text.primary' : 'text.secondary',
                     },
                   }}
                 />
@@ -204,50 +217,41 @@ export function Navigation() {
       </List>
 
       {/* User Profile at Bottom */}
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 1.5 }}>
         <Box
           sx={{
-            p: 2,
-            borderRadius: 2,
-            backgroundColor: alpha('#ffffff', 0.05),
+            py: 1.25,
+            px: 1.5,
+            borderRadius: 1.5,
+            backgroundColor: alpha(primaryColor, 0.04),
+            border: `1px solid ${alpha(primaryColor, 0.06)}`,
             display: 'flex',
             alignItems: 'center',
-            gap: 1.5,
+            gap: 1.25,
           }}
         >
-          <Avatar
-            sx={{
-              width: 36,
-              height: 36,
-              background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: '#000',
-            }}
-          >
-            {profile?.name?.charAt(0).toUpperCase() ?? '?'}
-          </Avatar>
-          <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+          <UserAvatar size={30} />
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography
               variant="body2"
+              noWrap
               sx={{
-                color: '#ffffff',
+                color: 'text.primary',
                 fontWeight: 600,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
+                fontSize: '0.8125rem',
+                lineHeight: 1.3,
               }}
             >
               {profile?.name ?? 'User'}
             </Typography>
             <Typography
               variant="caption"
+              noWrap
               sx={{
-                color: alpha('#ffffff', 0.6),
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
+                color: 'text.secondary',
                 display: 'block',
+                fontSize: '0.6875rem',
+                lineHeight: 1.3,
               }}
             >
               Member
@@ -266,12 +270,12 @@ export function Navigation() {
         sx={{
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           ml: { md: `${DRAWER_WIDTH}px` },
-          backgroundColor: alpha('#121218', 0.8),
-          backdropFilter: 'saturate(200%) blur(30px)',
-          borderBottom: `1px solid ${alpha('#ffffff', 0.05)}`,
+          backgroundColor: alpha(theme.palette.background.default, 0.85),
+          backdropFilter: 'saturate(180%) blur(20px)',
+          borderBottom: `1px solid ${alpha(primaryColor, 0.06)}`,
         }}
       >
-        <Toolbar sx={{ px: { xs: 2, sm: 3 } }}>
+        <Toolbar sx={{ px: { xs: 2, sm: 3 }, minHeight: { xs: 64, sm: 64 } }}>
           <IconButton
             aria-label="open drawer"
             edge="start"
@@ -286,17 +290,7 @@ export function Navigation() {
           </IconButton>
           <Box sx={{ flexGrow: 1 }} />
           <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                background: 'linear-gradient(135deg, #F9B233 0%, #D99A1F 100%)',
-                fontWeight: 600,
-                color: '#000',
-              }}
-            >
-              {profile?.name?.charAt(0).toUpperCase() ?? '?'}
-            </Avatar>
+            <UserAvatar size={34} />
           </IconButton>
           <Menu
             anchorEl={anchorEl}
@@ -310,7 +304,6 @@ export function Navigation() {
                   mt: 1,
                   minWidth: 200,
                   borderRadius: 2,
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
                 },
               },
             }}
@@ -376,8 +369,8 @@ export function Navigation() {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: DRAWER_WIDTH,
-              backgroundColor: '#1E1E26',
-              borderRight: `1px solid ${alpha('#ffffff', 0.05)}`,
+              backgroundColor: drawerBg,
+              borderRight: `1px solid ${alpha(primaryColor, 0.08)}`,
             },
           }}
         >
@@ -390,8 +383,8 @@ export function Navigation() {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: DRAWER_WIDTH,
-              backgroundColor: '#1E1E26',
-              borderRight: `1px solid ${alpha('#ffffff', 0.05)}`,
+              backgroundColor: drawerBg,
+              borderRight: `1px solid ${alpha(primaryColor, 0.08)}`,
             },
           }}
           open

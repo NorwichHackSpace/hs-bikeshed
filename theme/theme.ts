@@ -2,19 +2,20 @@
 
 import { createTheme, alpha } from '@mui/material/styles'
 
-// Norwich Hackspace brand colors
+// Norwich Hackspace — retro hacker aesthetic
+// Muted terminal greens/teals as primary, hackspace yellow as sparse accent
 const brandColors = {
   primary: {
+    main: '#8B95A5',
+    light: '#A8B0BC',
+    dark: '#6B7585',
+    contrastText: '#0A0E12',
+  },
+  secondary: {
     main: '#F9B233',
     light: '#FBCA6A',
     dark: '#D99A1F',
     contrastText: '#000000',
-  },
-  secondary: {
-    main: '#6B7280',
-    light: '#9CA3AF',
-    dark: '#4B5563',
-    contrastText: '#ffffff',
   },
   success: {
     main: '#22C55E',
@@ -43,53 +44,57 @@ const brandColors = {
 }
 
 const grey = {
-  50: '#f9fafb',
-  100: '#f3f4f6',
-  200: '#e5e7eb',
-  300: '#d1d5db',
-  400: '#9ca3af',
-  500: '#6b7280',
-  600: '#4b5563',
-  700: '#374151',
-  800: '#1f2937',
-  900: '#111827',
+  50: '#f0f4f8',
+  100: '#e2e8f0',
+  200: '#cbd5e1',
+  300: '#94a3b8',
+  400: '#7a8ba0',
+  500: '#64748b',
+  600: '#475569',
+  700: '#334155',
+  800: '#1e293b',
+  900: '#0f172a',
 }
 
-// Dark palette
+// Dark palette — deep blue-tinted backgrounds
 const darkPalette = {
   mode: 'dark' as const,
   ...brandColors,
   grey,
   background: {
-    default: '#121218',
-    paper: '#1E1E26',
+    default: '#0A0E12',
+    paper: '#131920',
   },
   text: {
-    primary: '#F9FAFB',
-    secondary: '#9CA3AF',
+    primary: '#E2E8F0',
+    secondary: '#7A8BA0',
   },
-  divider: alpha('#ffffff', 0.08),
+  divider: alpha('#8B95A5', 0.08),
 }
 
-// Light palette
+// Light palette — cool greys with teal accents
 const lightPalette = {
   mode: 'light' as const,
   ...brandColors,
   grey,
   background: {
-    default: '#F5F5F7',
+    default: '#F0F4F8',
     paper: '#FFFFFF',
   },
   text: {
-    primary: '#1F2937',
-    secondary: '#6B7280',
+    primary: '#1A2332',
+    secondary: '#5A6B7F',
   },
   divider: alpha('#000000', 0.08),
 }
 
+const headingFont = '"JetBrains Mono Variable", "JetBrains Mono", "Fira Code", monospace'
+const bodyFont = '"DM Sans Variable", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+
 const getTypography = (textPrimary: string, textSecondary: string) => ({
-  fontFamily: '"Inter", "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  fontFamily: bodyFont,
   h1: {
+    fontFamily: headingFont,
     fontWeight: 700,
     fontSize: '2.25rem',
     lineHeight: 1.25,
@@ -97,6 +102,7 @@ const getTypography = (textPrimary: string, textSecondary: string) => ({
     color: textPrimary,
   },
   h2: {
+    fontFamily: headingFont,
     fontWeight: 700,
     fontSize: '1.875rem',
     lineHeight: 1.3,
@@ -104,24 +110,28 @@ const getTypography = (textPrimary: string, textSecondary: string) => ({
     color: textPrimary,
   },
   h3: {
+    fontFamily: headingFont,
     fontWeight: 600,
     fontSize: '1.5rem',
     lineHeight: 1.375,
     color: textPrimary,
   },
   h4: {
+    fontFamily: headingFont,
     fontWeight: 600,
     fontSize: '1.25rem',
     lineHeight: 1.375,
     color: textPrimary,
   },
   h5: {
+    fontFamily: headingFont,
     fontWeight: 600,
     fontSize: '1rem',
     lineHeight: 1.375,
     color: textPrimary,
   },
   h6: {
+    fontFamily: headingFont,
     fontWeight: 600,
     fontSize: '0.875rem',
     lineHeight: 1.5,
@@ -150,6 +160,7 @@ const getTypography = (textPrimary: string, textSecondary: string) => ({
   button: {
     fontWeight: 600,
     textTransform: 'none' as const,
+    letterSpacing: '0.02em',
   },
   caption: {
     fontSize: '0.75rem',
@@ -158,9 +169,10 @@ const getTypography = (textPrimary: string, textSecondary: string) => ({
     color: textSecondary,
   },
   overline: {
-    fontSize: '0.75rem',
+    fontFamily: headingFont,
+    fontSize: '0.7rem',
     fontWeight: 600,
-    letterSpacing: '0.5px',
+    letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
   },
 })
@@ -209,7 +221,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
         contained: {
           boxShadow: 'none',
           '&:hover': {
-            boxShadow: '0 4px 12px 0 rgba(249, 178, 51, 0.3)',
+            boxShadow: `0 4px 12px 0 ${alpha(palette.primary.main, 0.3)}`,
           },
         },
         containedPrimary: {
@@ -244,11 +256,11 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
           borderRadius: 12,
           backgroundColor: palette.background.paper,
           backgroundImage: 'none',
-          border: `1px solid ${alpha(alphaColor, 0.05)}`,
+          border: `1px solid ${alpha(palette.primary.main, isDark ? 0.08 : 0.05)}`,
           boxShadow: isDark ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.08)',
           transition: 'border-color 200ms ease-in-out, transform 200ms ease-in-out',
           '&:hover': {
-            borderColor: alpha(alphaColor, 0.1),
+            borderColor: alpha(palette.primary.main, isDark ? 0.15 : 0.12),
           },
         },
       },
@@ -306,8 +318,8 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
             color: isDark ? palette.info.light : palette.info.dark,
           },
           '&.MuiChip-colorSecondary': {
-            backgroundColor: alpha(palette.secondary.main, 0.2),
-            color: palette.text.primary,
+            backgroundColor: alpha(palette.secondary.main, 0.15),
+            color: isDark ? palette.secondary.light : palette.secondary.dark,
           },
         },
         outlined: {
@@ -325,7 +337,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
           boxShadow: 'none',
           backgroundColor: alpha(palette.background.default, 0.8),
           backdropFilter: 'blur(20px)',
-          borderBottom: `1px solid ${alpha(alphaColor, 0.05)}`,
+          borderBottom: `1px solid ${alpha(palette.primary.main, 0.06)}`,
           color: palette.text.primary,
         },
       },
@@ -333,9 +345,9 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          backgroundColor: isDark ? '#1E1E26' : '#FFFFFF',
+          backgroundColor: isDark ? '#0D1117' : '#FFFFFF',
           backgroundImage: 'none',
-          borderRight: `1px solid ${alpha(alphaColor, 0.05)}`,
+          borderRight: `1px solid ${alpha(palette.primary.main, 0.08)}`,
         },
       },
     },
@@ -347,10 +359,10 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
           padding: '12px 16px',
           color: palette.text.secondary,
           '&.Mui-selected': {
-            backgroundColor: alpha(alphaColor, 0.08),
+            backgroundColor: alpha(palette.primary.main, 0.1),
             color: palette.text.primary,
             '&:hover': {
-              backgroundColor: alpha(alphaColor, 0.12),
+              backgroundColor: alpha(palette.primary.main, 0.15),
             },
             '& .MuiListItemIcon-root': {
               color: palette.primary.main,
@@ -463,9 +475,9 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiFab: {
       styleOverrides: {
         root: {
-          boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.3)',
+          boxShadow: `0 4px 16px 0 ${alpha(palette.primary.main, 0.25)}`,
           '&:hover': {
-            boxShadow: '0 8px 24px 0 rgba(249, 178, 51, 0.3)',
+            boxShadow: `0 8px 24px 0 ${alpha(palette.primary.main, 0.35)}`,
           },
         },
         primary: {
@@ -480,7 +492,7 @@ const getComponents = (mode: 'light' | 'dark', palette: typeof darkPalette | typ
     MuiAvatar: {
       styleOverrides: {
         root: {
-          border: `2px solid ${alpha(alphaColor, 0.1)}`,
+          border: `2px solid ${alpha(palette.primary.main, 0.2)}`,
         },
       },
     },
