@@ -41,22 +41,22 @@ import { UserAvatar } from '@/components/ui/UserAvatar'
 const DRAWER_WIDTH = 260
 
 const navItems = [
-  { label: 'My Profile', href: '/profile', icon: <PersonIcon /> },
-  { label: 'My Usage', href: '/usage', icon: <BarChartIcon /> },
-  { label: 'Equipment', href: '/equipment', icon: <BuildIcon /> },
-  { label: 'Bookings', href: '/bookings', icon: <EventIcon /> },
-  { label: 'Inductions', href: '/inductions', icon: <SchoolIcon /> },
-  { label: 'Projects', href: '/projects', icon: <FolderIcon /> },
-  { label: 'Documents', href: '/documents', icon: <InsertDriveFileIcon /> },
-  { label: 'Design Doc', href: '/design', icon: <DescriptionIcon /> },
+  { label: 'My Profile', href: '/members/profile', icon: <PersonIcon /> },
+  { label: 'My Usage', href: '/members/usage', icon: <BarChartIcon /> },
+  { label: 'Equipment', href: '/members/equipment', icon: <BuildIcon /> },
+  { label: 'Bookings', href: '/members/bookings', icon: <EventIcon /> },
+  { label: 'Inductions', href: '/members/inductions', icon: <SchoolIcon /> },
+  { label: 'Projects', href: '/members/projects', icon: <FolderIcon /> },
+  { label: 'Documents', href: '/members/documents', icon: <InsertDriveFileIcon /> },
+  { label: 'Design Doc', href: '/members/design', icon: <DescriptionIcon /> },
 ]
 
 const adminItems = [
-  { label: 'Admin', href: '/admin', icon: <AdminPanelSettingsIcon /> },
+  { label: 'Admin', href: '/members/admin', icon: <AdminPanelSettingsIcon /> },
 ]
 
 const maintainerItems = [
-  { label: 'Maintainers', href: '/maintainers', icon: <HandymanIcon /> },
+  { label: 'Maintainers', href: '/members/maintainers', icon: <HandymanIcon /> },
 ]
 
 export function Navigation() {
@@ -320,7 +320,7 @@ export function Navigation() {
             <MenuItem
               onClick={() => {
                 handleMenuClose()
-                router.push('/profile')
+                router.push('/members/profile')
               }}
               sx={{ py: 1.5 }}
             >

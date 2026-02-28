@@ -29,7 +29,7 @@ export default function LoginPage() {
     e.preventDefault()
     try {
       await signInWithEmail(email, password)
-      router.push('/equipment')
+      router.push('/members/equipment')
     } catch {
       // Error is handled by store
     }

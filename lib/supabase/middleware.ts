@@ -35,12 +35,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protect dashboard routes
-  const isDashboardRoute = request.nextUrl.pathname.startsWith('/equipment') ||
-    request.nextUrl.pathname.startsWith('/bookings') ||
-    request.nextUrl.pathname.startsWith('/inductions') ||
-    request.nextUrl.pathname.startsWith('/projects') ||
-    request.nextUrl.pathname.startsWith('/admin') ||
-    request.nextUrl.pathname.startsWith('/profile')
+  const isDashboardRoute = request.nextUrl.pathname.startsWith('/members')
 
   if (isDashboardRoute && !user) {
     const url = request.nextUrl.clone()
@@ -83,7 +78,7 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/equipment'
+    url.pathname = '/members/equipment'
     return NextResponse.redirect(url)
   }
 

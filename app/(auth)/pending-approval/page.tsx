@@ -37,7 +37,7 @@ export default function PendingApprovalPage() {
 
       if (roles && roles.length > 0) {
         // User has been approved, redirect to equipment
-        router.push('/equipment')
+        router.push('/members/equipment')
       }
     }
 
@@ -60,7 +60,7 @@ export default function PendingApprovalPage() {
       .eq('user_id', user.id)
 
     if (roles && roles.length > 0) {
-      router.push('/equipment')
+      router.push('/members/equipment')
     } else {
       // Force page reload to show fresh state
       window.location.reload()
