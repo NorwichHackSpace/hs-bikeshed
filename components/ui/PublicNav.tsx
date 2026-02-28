@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -21,6 +21,7 @@ import {
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
+import { getClient } from '@/lib/supabase/client'
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -31,9 +32,16 @@ const navLinks = [
 
 export function PublicNav() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const pathname = usePathname()
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+
+  useEffect(() => {
+    getClient().auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user)
+    })
+  }, [])
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen)
@@ -143,37 +151,57 @@ export function PublicNav() {
 
           {/* Desktop auth buttons */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1.5 }}>
-            <Button
-              component={Link}
-              href="/login"
-              variant="outlined"
-              size="small"
-              sx={{
-                borderColor: alpha(isDark ? '#fff' : '#000', 0.2),
-                color: 'text.primary',
-                '&:hover': {
-                  borderColor: theme.palette.primary.main,
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                },
-              }}
-            >
-              Log in
-            </Button>
-            <Button
-              component={Link}
-              href="/signup"
-              variant="contained"
-              size="small"
-              sx={{
-                backgroundColor: theme.palette.secondary.main,
-                color: theme.palette.secondary.contrastText,
-                '&:hover': {
-                  backgroundColor: theme.palette.secondary.dark,
-                },
-              }}
-            >
-              Join
-            </Button>
+            {isLoggedIn ? (
+              <Button
+                component={Link}
+                href="/members/equipment"
+                variant="contained"
+                size="small"
+                sx={{
+                  backgroundColor: theme.palette.secondary.main,
+                  color: theme.palette.secondary.contrastText,
+                  '&:hover': {
+                    backgroundColor: theme.palette.secondary.dark,
+                  },
+                }}
+              >
+                Members
+              </Button>
+            ) : (
+              <>
+                <Button
+                  component={Link}
+                  href="/login"
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    borderColor: alpha(isDark ? '#fff' : '#000', 0.2),
+                    color: 'text.primary',
+                    '&:hover': {
+                      borderColor: theme.palette.primary.main,
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                    },
+                  }}
+                >
+                  Log in
+                </Button>
+                <Button
+                  component={Link}
+                  href="/signup"
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    backgroundColor: theme.palette.secondary.main,
+                    color: theme.palette.secondary.contrastText,
+                    '&:hover': {
+                      backgroundColor: theme.palette.secondary.dark,
+                    },
+                  }}
+                >
+                  Join
+                </Button>
+              </>
+            )}
           </Box>
 
           {/* Mobile hamburger */}
@@ -238,31 +266,52 @@ export function PublicNav() {
           ))}
         </List>
         <Box sx={{ px: 3, mt: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          <Button
-            component={Link}
-            href="/login"
-            variant="outlined"
-            fullWidth
-            onClick={handleDrawerToggle}
-          >
-            Log in
-          </Button>
-          <Button
-            component={Link}
-            href="/signup"
-            variant="contained"
-            fullWidth
-            onClick={handleDrawerToggle}
-            sx={{
-              backgroundColor: theme.palette.secondary.main,
-              color: theme.palette.secondary.contrastText,
-              '&:hover': {
-                backgroundColor: theme.palette.secondary.dark,
-              },
-            }}
-          >
-            Join
-          </Button>
+          {isLoggedIn ? (
+            <Button
+              component={Link}
+              href="/members/equipment"
+              variant="contained"
+              fullWidth
+              onClick={handleDrawerToggle}
+              sx={{
+                backgroundColor: theme.palette.secondary.main,
+                color: theme.palette.secondary.contrastText,
+                '&:hover': {
+                  backgroundColor: theme.palette.secondary.dark,
+                },
+              }}
+            >
+              Members
+            </Button>
+          ) : (
+            <>
+              <Button
+                component={Link}
+                href="/login"
+                variant="outlined"
+                fullWidth
+                onClick={handleDrawerToggle}
+              >
+                Log in
+              </Button>
+              <Button
+                component={Link}
+                href="/signup"
+                variant="contained"
+                fullWidth
+                onClick={handleDrawerToggle}
+                sx={{
+                  backgroundColor: theme.palette.secondary.main,
+                  color: theme.palette.secondary.contrastText,
+                  '&:hover': {
+                    backgroundColor: theme.palette.secondary.dark,
+                  },
+                }}
+              >
+                Join
+              </Button>
+            </>
+          )}
         </Box>
       </Drawer>
 

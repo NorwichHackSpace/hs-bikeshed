@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Box, Card, CardContent, CardMedia, Chip, Container, Grid, Typography, alpha } from '@mui/material'
 import { createClient } from '@/lib/supabase/server'
 
@@ -76,11 +77,13 @@ export default async function PublicProjectsPage() {
           <Grid container spacing={3}>
             {projects.map((project) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={project.id}>
+                <Link href={`/projects/${project.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}>
                 <Card
                   sx={{
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
+                    cursor: 'pointer',
                     transition: 'transform 200ms ease-in-out',
                     '&:hover': { transform: 'translateY(-4px)' },
                   }}
@@ -131,6 +134,7 @@ export default async function PublicProjectsPage() {
                     )}
                   </CardContent>
                 </Card>
+                </Link>
               </Grid>
             ))}
           </Grid>

@@ -21,6 +21,7 @@ import {
   useTheme,
   alpha,
 } from '@mui/material'
+import Link from 'next/link'
 import Image from 'next/image'
 import MenuIcon from '@mui/icons-material/Menu'
 import BuildIcon from '@mui/icons-material/Build'
@@ -117,10 +118,14 @@ export function Navigation() {
     >
       {/* Logo — fixed 64px to match AppBar Toolbar height */}
       <Toolbar
+        component={Link}
+        href="/"
         sx={{
           px: 2.5,
           gap: 1.5,
           minHeight: { xs: 64, sm: 64 },
+          textDecoration: 'none',
+          cursor: 'pointer',
         }}
       >
         <Image
