@@ -166,30 +166,6 @@ export default function HomePage() {
         </Grid>
       </Container>
 
-      {/* Location */}
-      <Box
-        sx={{
-          py: { xs: 6, md: 10 },
-          px: 3,
-          borderTop: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.06)}`,
-        }}
-      >
-        <Container maxWidth="sm" sx={{ textAlign: 'center' }}>
-          <Typography variant="overline" sx={{ color: 'secondary.main', mb: 1, display: 'block' }}>
-            Find Us
-          </Typography>
-          <Typography variant="h3" gutterBottom>
-            Visit the BikeShed
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-            Norwich Hackspace (The BikeShed)
-            <br />
-            Unit 1, Seymour Road
-            <br />
-            Norwich, NR1 1RB
-          </Typography>
-        </Container>
-      </Box>
     </>
   )
 }
